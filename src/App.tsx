@@ -7,6 +7,12 @@ import Index from "./pages/Index";
 import ArtistDetail from "./pages/ArtistDetail";
 import ArtistList from "./pages/ArtistList";
 import Search from "./pages/Search";
+import Community from "./pages/Community";
+import BoardList from "./pages/BoardList";
+import PostDetail from "./pages/PostDetail";
+import Feed from "./pages/Feed";
+import Chatting from "./pages/Chatting";
+import My from "./pages/My";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +28,12 @@ const App = () => (
           <Route path="/artist/:artistId" element={<ArtistDetail />} />
           <Route path="/artists" element={<ArtistList />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/board/:boardId" element={<BoardList />} />
+          <Route path="/board/:boardId/post/:postId" element={<PostDetail />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/chatting" element={<Chatting />} />
+          <Route path="/my" element={<My />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
