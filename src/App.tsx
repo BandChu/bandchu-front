@@ -12,6 +12,7 @@ import BoardList from "./pages/BoardList";
 import PostDetail from "./pages/PostDetail";
 import Feed from "./pages/Feed";
 import Chatting from "./pages/Chatting";
+import ChatRoom from "./pages/ChatRoom";
 import My from "./pages/My";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/board/:boardId/post/:postId" element={<PostDetail />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/chatting" element={<Chatting />} />
+          <Route path="/chat/:roomId" element={<ChatRoom />} />
           <Route path="/my" element={<My />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
