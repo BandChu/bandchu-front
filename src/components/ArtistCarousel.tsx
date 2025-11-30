@@ -1,5 +1,6 @@
 import { Plus, Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Artist {
   id: number;
@@ -9,8 +10,9 @@ interface Artist {
 }
 
 const ArtistCarousel = () => {
+  const navigate = useNavigate();
   const [artists, setArtists] = useState<Artist[]>([
-    { id: 1, name: "아티스트명", isFollowing: true },
+    { id: 1, name: "실리카겔", isFollowing: true },
     { id: 2, name: "길어지면...", isFollowing: false },
     { id: 3, name: "아티스트명", isFollowing: true },
     { id: 4, name: "아티스트명", isFollowing: false },
@@ -26,12 +28,18 @@ const ArtistCarousel = () => {
     <div className="px-6 py-4 border-b border-border">
       <div className="flex items-center justify-between mb-4">
         <div className="flex-1" />
-        <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          펼치기 〉
+        <button 
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => navigate("/artists")}
+        >
+          + 펼쳐보기 〉
         </button>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-        <button className="flex-shrink-0 flex flex-col items-center gap-2">
+        <button 
+          className="flex-shrink-0 flex flex-col items-center gap-2"
+          onClick={() => navigate("/artists")}
+        >
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
             <Plus className="w-6 h-6 text-muted-foreground" />
           </div>
@@ -39,7 +47,15 @@ const ArtistCarousel = () => {
         {artists.map((artist) => (
           <button
             key={artist.id}
-            onClick={() => toggleFollow(artist.id)}
+            onClick={(e) => {
+              if (e.detail === 2) {
+                // Double click
+                navigate(`/artist/${artist.id}`);
+              } else {
+                // Single click
+                toggleFollow(artist.id);
+              }
+            }}
             className="flex-shrink-0 flex flex-col items-center gap-2"
           >
             <div className="relative">

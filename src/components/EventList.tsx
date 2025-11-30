@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 interface Event {
@@ -11,6 +12,7 @@ interface Event {
 }
 
 const EventList = () => {
+  const navigate = useNavigate();
   const events: Event[] = [
     {
       id: 1,
@@ -24,7 +26,12 @@ const EventList = () => {
 
   return (
     <div className="px-6 py-4">
-      <h3 className="text-lg font-bold text-foreground mb-4">실리카겔</h3>
+      <h3 
+        className="text-lg font-bold text-foreground mb-4 cursor-pointer hover:text-primary transition-colors"
+        onClick={() => navigate("/artist/1")}
+      >
+        실리카겔
+      </h3>
       <div className="space-y-4">
         {events.map((event) => (
           <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
