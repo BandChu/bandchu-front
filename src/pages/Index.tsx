@@ -1,12 +1,18 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Header from "@/components/Header";
+import ArtistCarousel from "@/components/ArtistCarousel";
+import Calendar from "@/components/Calendar";
+import EventList from "@/components/EventList";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="max-w-screen-xl mx-auto">
+        <ArtistCarousel />
+        <Calendar eventDates={[8, 10, 27, 28]} />
+        <div className="h-4 bg-muted/30" />
+        <EventList />
+      </main>
     </div>
   );
 };
