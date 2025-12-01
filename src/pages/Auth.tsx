@@ -43,6 +43,8 @@ const Auth = () => {
               onClick={() => {
                 // TODO: 구글 로그인 구현
                 console.log("구글 로그인");
+                // 로그인 성공 시 홈으로 이동
+                navigate("/home");
               }}
             >
               <GoogleIcon className="w-5 h-5" />

@@ -30,7 +30,7 @@ const Login = () => {
       // TODO: API 호출
       console.log("Login data:", data);
       // 로그인 성공 시 홈으로 이동
-      navigate("/");
+      navigate("/home");
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -128,6 +128,8 @@ const Login = () => {
             onClick={() => {
               // TODO: 구글 로그인 구현
               console.log("구글 로그인");
+              // 로그인 성공 시 홈으로 이동
+              navigate("/home");
             }}
           >
             <GoogleIcon className="w-5 h-5" />
