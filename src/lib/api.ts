@@ -20,10 +20,19 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 인증이 필요 없는 엔드포인트 목록
+    const publicEndpoints = ['/api/members/login', '/api/members/signup', '/api/members/token/refresh'];
+    
+    // 인증이 필요 없는 엔드포인트가 아니고 토큰이 있는 경우에만 Authorization 헤더 추가
+    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+    
+    if (!isPublicEndpoint) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    
     return config;
   },
   (error) => {
