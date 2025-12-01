@@ -41,7 +41,15 @@ const ArtistCarousel = ({ artists, selectedArtistIds, onArtistSelect }: ArtistCa
             <div className="relative">
               <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-primary/80 to-primary overflow-hidden flex items-center justify-center
                 ring-2 transition-all ${selectedArtistIds.includes(artist.artistId) ? 'ring-primary ring-offset-2 ring-offset-background' : 'ring-transparent'}`}>
-                <img src={artist.profileImageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                {artist.profileImageUrl ? (
+                  <img src={artist.profileImageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-secondary flex items-center justify-center">
+                    <span className="text-lg font-bold text-secondary-foreground">
+                      {artist.name}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </button>

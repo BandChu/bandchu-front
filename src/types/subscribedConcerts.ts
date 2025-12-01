@@ -16,7 +16,7 @@ export interface Concert {
 export interface SubscribedArtistWithConcerts {
   artistId: number;
   name: string;
-  profileImageUrl: string;
+  profileImageUrl?: string;
   subscribedAt: string;
   concerts: Concert[];
 }
