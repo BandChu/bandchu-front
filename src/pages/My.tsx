@@ -40,37 +40,25 @@ const My = () => {
   };
 
   const handleLogout = async () => {
+    setIsLogoutDialogOpen(false); // 다이얼로그 먼저 닫기
+    
     try {
       await logout();
-      // 로그아웃 성공 시 localStorage 정리
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userNickname');
-      localStorage.removeItem('userProfileImage');
-      localStorage.removeItem('userRole');
-      toast.success('로그아웃되었습니다.');
-      navigate('/auth');
     } catch (error: any) {
       // API 호출 실패해도 로컬 정리 후 로그아웃 처리
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userNickname');
-      localStorage.removeItem('userProfileImage');
-      localStorage.removeItem('userRole');
-      
-      if (!error.response && error.request) {
-        toast.error('네트워크 에러가 발생했습니다.');
-      } else {
-        const errorMessage = 
-          error.response?.data?.message || 
-          error.response?.data?.error || 
-          '로그아웃에 실패했습니다.';
-        toast.error(errorMessage);
-      }
-      navigate('/auth');
+      console.error('로그아웃 API 에러:', error);
     }
+    
+    // API 호출 성공 여부와 관계없이 로컬 정리 후 로그아웃 처리
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userNickname');
+    localStorage.removeItem('userProfileImage');
+    localStorage.removeItem('userRole');
+    
+    toast.success('로그아웃되었습니다.');
+    navigate('/auth');
   };
 
   const menuItems = [
