@@ -131,10 +131,7 @@ const Login = () => {
             variant="outline"
             className="w-full h-14 text-base font-medium border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-all rounded-xl flex items-center justify-center gap-3"
             onClick={() => {
-              // TODO: 구글 로그인 구현
-              console.log("구글 로그인");
-              // 로그인 성공 시 홈으로 이동
-              navigate("/home");
+              toast.info('구글 로그인 기능은 현재 미구현입니다.');
             }}
           >
             <GoogleIcon className="w-5 h-5" />
