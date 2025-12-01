@@ -20,7 +20,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border px-6 py-4">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
-        <h1 className="text-2xl font-bold text-foreground cursor-pointer" onClick={handleLogoClick}>
+        <h1 className="text-2xl font-bold text-foreground cursor-pointer" onClick={handleLogoClick} style={{ fontFamily: '"Stereofidelic", sans-serif' }}>
           BANDCHU
         </h1>
         <Button variant="ghost" size="icon" onClick={() => navigate("/search")}>
