@@ -1,9 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   User, 
   Settings, 
@@ -18,6 +29,7 @@ import { toast } from "sonner";
 
 const My = () => {
   const navigate = useNavigate();
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   // localStorage에서 사용자 정보 가져오기
   const userInfo = {
@@ -155,7 +167,7 @@ const My = () => {
           <Card className="border-0 shadow-sm bg-card">
             <CardContent className="p-0">
               <button
-                onClick={handleLogout}
+                onClick={() => setIsLogoutDialogOpen(true)}
                 className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent/50 transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
@@ -184,6 +196,24 @@ const My = () => {
         </div>
       </main>
       <BottomNav />
+
+      {/* 로그아웃 확인 다이얼로그 */}
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>로그아웃 하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              로그아웃 후에는 일부 기능을 사용하실 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              로그아웃
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
