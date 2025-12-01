@@ -30,7 +30,7 @@ const ArtistCarousel = () => {
         <div className="flex-1" />
         <button 
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          onClick={() => navigate("/artists")}
+          onClick={() => navigate("/subscriptions")}
         >
           + 펼쳐보기 〉
         </button>

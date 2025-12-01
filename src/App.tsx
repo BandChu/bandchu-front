@@ -15,6 +15,7 @@ import Chatting from "./pages/Chatting";
 import ChatRoom from "./pages/ChatRoom";
 import My from "./pages/My";
 import NotFound from "./pages/NotFound";
+import SubscribedArtistList from "./pages/SubscribedArtistList";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/artist/:artistId" element={<ArtistDetail />} />
           <Route path="/artists" element={<ArtistList />} />
+          <Route path="/subscriptions" element={<SubscribedArtistList />} />
           <Route path="/search" element={<Search />} />
           <Route path="/community" element={<Community />} />
           <Route path="/board/:boardId" element={<BoardList />} />
