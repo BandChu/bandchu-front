@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Link, CalendarDays } from "lucide-react";
+import { ArrowLeft, Link, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/api";
-import { Artist } from "@/types/artist";
+import type { ArtistDetail } from "@/types/artist";
 import { Album } from "@/types/album";
 import { Concert } from "@/types/concert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +16,7 @@ const ArtistDetail = () => {
   const { artistId } = useParams<{ artistId: string }>();
   const navigate = useNavigate();
 
-  const [artist, setArtist] = useState<Artist | null>(null);
+  const [artist, setArtist] = useState<ArtistDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +35,7 @@ const ArtistDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiClient.get<{ success: boolean; data: Artist; message: string }>(
+        const response = await apiClient.get<{ success: boolean; data: ArtistDetail; message: string }>(
           `/api/artists/${artistId}`
         );
         if (response.data.success) {
