@@ -18,8 +18,11 @@ export interface SignupRequest {
 }
 
 export interface SignupResponse {
-  accessToken: string;
-  refreshToken: string;
+  memberId: number;
+  email: string;
+  nickname: string;
+  role: 'FAN' | 'ARTIST';
+  createdAt: string;
 }
 
 export interface ProfileSetupRequest {
@@ -60,20 +63,12 @@ export const login = async (data: LoginRequest): Promise<LoginResponse> => {
 export const signup = async (data: SignupRequest): Promise<SignupResponse> => {
   const response = await apiClient.post('/api/members/signup', data);
   
-  // API 응답 구조: { success: true, data: { accessToken, refreshToken }, message: "string" }
+  // API 응답 구조: { success: true, data: { memberId, email, nickname, role, createdAt }, message: "string" }
   if (response.data && response.data.data) {
-    const tokenData = response.data.data;
-    if (tokenData.accessToken && tokenData.refreshToken) {
-      return tokenData;
-    }
+    return response.data.data;
   }
   
-  // 직접 토큰이 있는 경우
-  if (response.data.accessToken && response.data.refreshToken) {
-    return response.data;
-  }
-  
-  throw new Error('Invalid response structure: tokens not found');
+  throw new Error('회원가입 응답 구조가 올바르지 않습니다.');
 };
 
 // 프로필 설정

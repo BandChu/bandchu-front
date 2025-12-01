@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import { signup } from "@/lib/api/auth";
+import { signup, login } from "@/lib/api/auth";
 import { toast } from "sonner";
 
 const signupFormSchema = z.object({
@@ -31,15 +31,22 @@ const SignupForm = () => {
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
-      const response = await signup({
+      // 회원가입
+      await signup({
         email: data.email,
         password: data.password,
         nickname: 'temp', // 프로필 설정에서 업데이트할 예정
         role: userType,
       });
       
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // 회원가입 성공 후 바로 로그인하여 토큰 받기
+      const loginResponse = await login({
+        email: data.email,
+        password: data.password,
+      });
+      
+      localStorage.setItem('accessToken', loginResponse.accessToken);
+      localStorage.setItem('refreshToken', loginResponse.refreshToken);
       // 회원가입 시 이메일과 role 저장
       localStorage.setItem('userEmail', data.email);
       localStorage.setItem('userRole', userType);
