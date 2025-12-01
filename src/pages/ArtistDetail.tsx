@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Link } from "lucide-react";
+import { ArrowLeft, ChevronRight, Link, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/api";
 import { Artist } from "@/types/artist";
 import { Album } from "@/types/album";
+import { Concert } from "@/types/concert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatPerformingSchedule, formatDateTime } from "@/lib/utils";
 
 const ArtistDetail = () => {
   const { artistId } = useParams<{ artistId: string }>();
@@ -21,6 +23,10 @@ const ArtistDetail = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumsLoading, setAlbumsLoading] = useState(true);
   const [albumsError, setAlbumsError] = useState<string | null>(null);
+
+  const [concerts, setConcerts] = useState<Concert[]>([]);
+  const [concertsLoading, setConcertsLoading] = useState(true);
+  const [concertsError, setConcertsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!artistId) return;
@@ -65,25 +71,30 @@ const ArtistDetail = () => {
       }
     };
 
+    const fetchConcerts = async () => {
+      setConcertsLoading(true);
+      setConcertsError(null);
+      try {
+        const response = await apiClient.get<{ success: boolean; data: { concerts: Concert[] }; message: string }>(
+          `/api/concerts?artistId=${artistId}`
+        );
+        if (response.data.success) {
+          setConcerts(response.data.data.concerts);
+        } else {
+          throw new Error(response.data.message || 'Failed to fetch concerts');
+        }
+      } catch (err) {
+        setConcertsError("공연 정보를 불러오는 데 실패했습니다.");
+        console.error(err);
+      } finally {
+        setConcertsLoading(false);
+      }
+    };
+
     fetchArtist();
     fetchAlbums();
+    fetchConcerts();
   }, [artistId]);
-
-  // Mock data for concerts (can be replaced with API data later)
-  const concerts = [
-    {
-      id: 1,
-      title: "2025 연말 콘서트 [어쩌구저쩌구]",
-      date: "12.27(토) - 12.28(일)",
-      location: "콘서트 | 일산 킨텍스",
-    },
-    {
-      id: 2,
-      title: "○○ 연말 콘서트 티켓 오픈",
-      date: "12.27(토)",
-      location: "예매일정 | NOL 티켓",
-    },
-  ];
 
   if (loading) {
     return (
@@ -150,30 +161,68 @@ const ArtistDetail = () => {
         </TabsList>
 
         <TabsContent value="concerts" className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-foreground">공연/행사</h3>
-            <button className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-              더보기 <ChevronRight className="h-4 w-4" />
-            </button>
           </div>
-          {concerts.map((concert) => (
-            <Card key={concert.id} className="overflow-hidden">
-              <div className="flex gap-4 p-4">
-                <div className="w-20 h-20 rounded-lg bg-muted flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {concert.date}
-                  </p>
-                  <h4 className="font-semibold text-foreground mb-1 truncate">
-                    {concert.title}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {concert.location}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+          {concertsLoading ? (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <Card key={i} className="flex gap-4 p-4">
+                  <Skeleton className="w-24 h-32 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-5 w-1/2" />
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-2/3 mt-1" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : concertsError ? (
+            <div className="text-center py-12 text-destructive">{concertsError}</div>
+          ) : concerts.length > 0 ? (
+            <div className="space-y-4">
+              {concerts.map((concert) => (
+                <Card key={concert.concertId} className="overflow-hidden">
+                  <div className="flex gap-4 p-4">
+                    <div className="w-24 h-32 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                      {concert.posterImageUrl ? (
+                        <img src={concert.posterImageUrl} alt={concert.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-secondary" />
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-between flex-1 min-w-0">
+                      <div>
+                        <p className="text-sm text-primary font-semibold mb-1">
+                          {formatPerformingSchedule(concert.performingSchedule.map(s => s.date))}
+                        </p>
+                        <h4 className="font-bold text-foreground mb-1 truncate">
+                          {concert.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mb-1">{concert.place}</p>
+                        {concert.bookingSchedule && concert.bookingSchedule !== 'null' && (
+                          <p className="text-xs text-muted-foreground flex items-center">
+                            <CalendarDays className="h-3 w-3 mr-1.5" />
+                            예매: {formatDateTime(concert.bookingSchedule)}
+                          </p>
+                        )}
+                      </div>
+                      {concert.bookingUrl && (
+                        <a href={concert.bookingUrl} target="_blank" rel="noopener noreferrer" className="mt-2">
+                          <Button size="sm">예매하기</Button>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              공연/행사 정보가 없습니다
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="albums" className="space-y-4">
