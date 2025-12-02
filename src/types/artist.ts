@@ -6,24 +6,14 @@ export interface SnsLink {
 export interface ArtistDetail {
   artistId: number;
   name: string;
-<<<<<<< HEAD
-  profileImageUrl: string;
-  description: string;
-  genre: string[];
-=======
   profileImageUrl?: string;
   description?: string;
   genre?: string[];
->>>>>>> js
   sns: SnsLink[];
 }
 
 export interface Artist {
-<<<<<<< HEAD
-  artistId: number;
-=======
   id: number;
->>>>>>> js
   name: string;
   profileImageUrl: string;
   createdAt: string;
@@ -36,7 +26,3 @@ export interface ArtistsApiResponse {
   };
   message: string;
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> js

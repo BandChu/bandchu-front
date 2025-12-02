@@ -250,20 +250,20 @@ const ArtistDetail = () => {
                           {concert.title}
                         </h4>
                         <p className="text-sm text-muted-foreground mb-1">{concert.place}</p>
-                        {concert.bookingSchedule && concert.bookingSchedule !== 'null' && (
+                        {concert.bookingSchedule && concert.bookingSchedule !== 'null' && concert.bookingUrl && (
                           <p className="text-xs text-muted-foreground flex items-center">
                             <CalendarDays className="h-3 w-3 mr-1.5" />
                             예매: {formatDateTime(concert.bookingSchedule)}
                           </p>
                         )}
                       </div>
-                      {concert.bookingUrl && (
-                        <Button 
-                          size="sm" 
+                      {concert.bookingUrl && concert.bookingSchedule && concert.bookingSchedule !== 'null' && (
+                        <Button
+                          size="sm"
                           className="mt-2"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toast.info("아직 미구현입니다.");
+                            window.open(concert.bookingUrl, '_blank', 'noopener,noreferrer');
                           }}
                         >
                           예매하기
