@@ -1,70 +1,39 @@
-import { useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, Plus, Search, Settings, Smile, ThumbsUp, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-
-interface Message {
-  id: number;
-  sender: string;
-  text: string;
-  time: string;
-  isMine: boolean;
-}
+import { getOrCreateChatRoom, addMessageToRoom, ChatMessage } from "@/lib/chatstore";
 
 const ChatRoom = () => {
   const navigate = useNavigate();
-  const { roomId } = useParams();
   const [searchParams] = useSearchParams();
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   
-  // Get username and board info from URL params or roomId
-  const usernameFromParam = searchParams.get("user");
-  const boardFromParam = searchParams.get("board");
-  
-  // Mock data for existing chat rooms
-  const existingRooms: Record<string, { name: string; board: string; messages: Message[] }> = {
-    "1": {
-      name: "roseinseo",
-      board: "자유 게시판",
-      messages: [
-        { id: 1, sender: "roseinseo", text: "안녕하세요!", time: "10:30", isMine: false },
-        { id: 2, sender: "roseinseo", text: "게시판 보고 연락했습니다", time: "10:31", isMine: false },
-      ],
-    },
-    "2": {
-      name: "haril_lemon",
-      board: "동행 게시판",
-      messages: [
-        { id: 1, sender: "haril_lemon", text: "안녕하세요!", time: "09:00", isMine: false },
-      ],
-    },
-    "3": {
-      name: "m_cylin01",
-      board: "자유 게시판",
-      messages: [],
-    },
-  };
+  const username = searchParams.get("user") || "Unknown";
+  const board = searchParams.get("board") || "";
 
-  // Determine room info - from URL params (new chat) or existing rooms
-  const existingRoom = roomId ? existingRooms[roomId] : null;
-  const roomName = usernameFromParam || existingRoom?.name || roomId || "Unknown";
-  const initialMessages = usernameFromParam ? [] : (existingRoom?.messages || []);
-  
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  useEffect(() => {
+    if (username && board) {
+      const room = getOrCreateChatRoom(username, board);
+      setMessages(room.messages);
+    }
+  }, [username, board]);
 
   const handleSend = () => {
-    if (message.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          sender: "나",
-          text: message,
-          time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
-          isMine: true,
-        },
-      ]);
+    if (message.trim() && username) {
+      const newMessage: ChatMessage = {
+        id: Date.now(),
+        sender: "나",
+        text: message,
+        time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
+        isMine: true,
+      };
+      
+      addMessageToRoom(username, newMessage);
+      setMessages(prev => [...prev, newMessage]);
       setMessage("");
     }
   };
@@ -83,9 +52,9 @@ const ChatRoom = () => {
             </button>
             <Avatar className="w-10 h-10">
               <AvatarImage src="" />
-              <AvatarFallback>{roomName.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <h1 className="text-lg font-semibold">{roomName}</h1>
+            <h1 className="text-lg font-semibold">{username}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button className="p-2 hover:bg-accent rounded-full transition-colors">
@@ -104,6 +73,12 @@ const ChatRoom = () => {
       {/* Messages */}
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-screen-xl mx-auto space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-10">
+              <p>{board} 글에서 시작된 채팅입니다</p>
+              <p className="text-sm mt-2">첫 메시지를 보내보세요!</p>
+            </div>
+          )}
           {messages.map((msg) => (
             <div
               key={msg.id}

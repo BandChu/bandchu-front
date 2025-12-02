@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getOrCreateChatRoom } from "@/lib/chatstore";
 
 const PostDetail = () => {
   const { boardId, postId } = useParams();
@@ -49,6 +50,7 @@ const PostDetail = () => {
 
   const handleStartChat = (username: string) => {
     const boardName = boardId === "free" ? "자유 게시판" : boardId === "companion" ? "동행 게시판" : "공지";
+    getOrCreateChatRoom(username, boardName);
     navigate(`/chat/${username}?user=${username}&board=${encodeURIComponent(boardName)}`);
   };
 
