@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import ArtistDetail from "./pages/ArtistDetail";
 import ArtistList from "./pages/ArtistList";
+import PostCreate from "./pages/PostCreate";
 import Search from "./pages/Search";
 import Community from "./pages/Community";
 import BoardList from "./pages/BoardList";
@@ -49,8 +50,10 @@ const AnimatedRoutes = () => {
         <Route path="/artist/:artistId" element={<ArtistDetail />} />
         <Route path="/artists" element={<ArtistList />} />
         <Route path="/search" element={<Search />} />
+
         <Route path="/community" element={<Community />} />
         <Route path="/board/:boardId" element={<BoardList />} />
+         <Route path="/board/:boardId/create" element={<PostCreate />} />
         <Route path="/board/:boardId/post/:postId" element={<PostDetail />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/chatting" element={<Chatting />} />

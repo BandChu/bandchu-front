@@ -15,32 +15,8 @@ const BoardList = () => {
     qna: "Q&A 게시판",
   };
 
-  const posts = [
-    {
-      id: 1,
-      title: "김완주 사랑해",
-      author: "lemonson03",
-      date: "2025.11.10",
-      likes: 24,
-      comments: 5,
-    },
-    {
-      id: 2,
-      title: "오아시스 내한 일정 확정!",
-      author: "oasis_fan",
-      date: "2025.11.09",
-      likes: 156,
-      comments: 32,
-    },
-    {
-      id: 3,
-      title: "실리카겔 단콘 후기",
-      author: "silica_lover",
-      date: "2025.11.08",
-      likes: 89,
-      comments: 18,
-    },
-  ];
+  // TODO: API 연동 시 실제 데이터로 교체
+  const posts: { id: number; title: string; author: string; date: string; likes: number; comments: number }[] = [];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -53,7 +29,10 @@ const BoardList = () => {
             <h1 className="text-lg font-bold">{boardNames[boardId || ""] || "게시판"}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button className="text-foreground">
+            <button 
+              onClick={() => navigate(`/board/${boardId}/create`)}
+              className="text-foreground"
+            >
               <Plus className="w-6 h-6" />
             </button>
             <button className="text-foreground">
@@ -64,25 +43,32 @@ const BoardList = () => {
       </header>
 
       <main className="max-w-screen-xl mx-auto px-4 py-4">
-        <div className="space-y-3">
-          {posts.map((post) => (
-            <button
-              key={post.id}
-              onClick={() => navigate(`/board/${boardId}/post/${post.id}`)}
-              className="w-full p-4 bg-card rounded-lg hover:bg-accent transition-colors text-left"
-            >
-              <h3 className="font-semibold text-foreground mb-2">{post.title}</h3>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  {post.author} · {post.date}
-                </span>
-                <span>
-                  ❤️ {post.likes} · 💬 {post.comments}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+        {posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <p className="text-lg mb-2">아직 게시글이 없습니다</p>
+            <p className="text-sm">첫 번째 게시글을 작성해보세요!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {posts.map((post) => (
+              <button
+                key={post.id}
+                onClick={() => navigate(`/board/${boardId}/post/${post.id}`)}
+                className="w-full p-4 bg-card rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <h3 className="font-semibold text-foreground mb-2">{post.title}</h3>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>
+                    {post.author} · {post.date}
+                  </span>
+                  <span>
+                    ❤️ {post.likes} · 💬 {post.comments}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </main>
       <BottomNav />
     </div>
