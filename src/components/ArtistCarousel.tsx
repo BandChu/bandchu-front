@@ -3,19 +3,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArtistWithConcerts } from "@/types/subscribedConcerts";
 
-// --- 장르/설명 Mock 데이터 (API에 해당 필드가 없으므로 임시 사용) ---
-const artistGenres: Record<number, string[]> = {
-  1: ['인디 록', '록'], 2: ['인디 록', '록'], 3: ['인디 록', '록'], 4: ['인디 록', '록'], 5: ['인디 록', '록'],
-  6: ['힙합', '랩'], 7: ['힙합', '랩'], 8: ['힙합', '랩'], 9: ['인디 록', '록'], 10: ['인디 록', '록'],
-};
-const artistDescriptions: Record<number, string> = {
-  1: '감성적인 인디 록 밴드로 따뜻한 멜로디와 진솔한 가사로 사랑받고 있어요.', 2: '독특한 사운드와 유머러스한 가사로 많은 사랑을 받는 인디 밴드예요.', 3: '감성적인 발라드와 록을 결합한 음악으로 많은 이들의 마음을 사로잡아요.', 4: '독창적인 사운드와 감각적인 연주로 인디씬의 대표 밴드예요.', 5: '따뜻하고 서정적인 음악으로 많은 사랑을 받고 있어요.',
-  6: '독창적인 플로우와 감각적인 비트로 힙합씬을 대표하는 아티스트예요.', 7: '독특한 스타일과 진솔한 가사로 많은 사랑을 받는 힙합 아티스트예요.', 8: '깊이 있는 가사와 감각적인 비트로 힙합의 새로운 지평을 열어가고 있어요.', 9: '따뜻하고 감성적인 음악으로 많은 이들의 마음을 따뜻하게 해주는 밴드예요.', 10: '서정적이고 감성적인 발라드로 많은 사랑을 받고 있어요.',
-};
+// --- 장르 스타일링 헬퍼 함수 (MyArtistProfile.tsx에서 가져와 일관성 유지) ---
 const genreColors: Record<string, string> = {
   '인디 록': 'bg-blue-50 text-blue-600 border-blue-200/60', '록': 'bg-red-50 text-red-600 border-red-200/60', '힙합': 'bg-purple-50 text-purple-600 border-purple-200/60', '랩': 'bg-orange-50 text-orange-600 border-orange-200/60',
+  'BALLAD': 'bg-blue-50 text-blue-700 border-blue-200', 'DANCE': 'bg-pink-50 text-pink-700 border-pink-200', 'RAP': 'bg-orange-50 text-orange-700 border-orange-200', 'HIPHOP': 'bg-purple-50 text-purple-700 border-purple-200', 'ROCK': 'bg-red-50 text-red-700 border-red-200', 'METAL': 'bg-gray-800 text-gray-100 border-gray-700', 'POP': 'bg-yellow-50 text-yellow-700 border-yellow-200', 'INDIE': 'bg-green-50 text-green-700 border-green-200', 'JAZZ': 'bg-amber-50 text-amber-700 border-amber-200', 'JPOP': 'bg-rose-50 text-rose-700 border-rose-200',
 };
-const getGenreColorClass = (genre: string): string => genreColors[genre] || 'bg-muted text-muted-foreground border-border';
+const getGenreColorClass = (genre: string): string => {
+  const upperGenre = genre.toUpperCase();
+  return genreColors[upperGenre] || genreColors[genre] || 'bg-muted text-muted-foreground border-border';
+}
 // -------------------------------------------------------------
 
 interface ArtistCarouselProps {
@@ -92,12 +88,14 @@ const ArtistCarousel = ({ artists = [], onArtistToggle, selectedArtistIds = [] }
                           </div>
                           <div className="flex-1 min-w-0 pt-0.5">
                             <h4 className="text-sm font-semibold text-gray-900 mb-1.5 leading-tight">{artist.name}</h4>
-                            <p className="text-xs text-gray-500 line-clamp-2 mb-2 leading-relaxed">{artistDescriptions[artist.artistId] || ''}</p>
-                            <div className="flex gap-1.5 flex-wrap">
-                              {(artistGenres[artist.artistId] || []).slice(0, 2).map((g) => (
-                                <span key={g} className={`text-xs px-2.5 py-1 rounded-full border font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${getGenreColorClass(g)}`}>{g}</span>
-                              ))}
-                            </div>
+                            <p className="text-xs text-gray-500 line-clamp-2 mb-2 leading-relaxed">{artist.description || ''}</p>
+                            {artist.genre && artist.genre.length > 0 && (
+                              <div className="flex gap-1.5 flex-wrap">
+                                {artist.genre.slice(0, 2).map((g) => (
+                                  <span key={g} className={`text-xs px-2.5 py-1 rounded-full border font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${getGenreColorClass(g)}`}>{g}</span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0 ml-4 mt-1 group-hover:text-gray-500 transition-colors" />

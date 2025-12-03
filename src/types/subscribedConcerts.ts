@@ -8,7 +8,7 @@ export interface ConcertForSubscribed {
   title: string;
   place: string;
   bookingUrl: string;
-  posterImageUrl: string;
+  posterImageUrl?: string;
   performingSchedule: PerformingSchedule[];
   bookingSchedule: string;
 }
@@ -18,6 +18,8 @@ export interface ArtistWithConcerts {
   name: string;
   profileImageUrl: string;
   subscribedAt: string;
+  description?: string;
+  genre?: string[];
   concerts: ConcertForSubscribed[];
 }
 
