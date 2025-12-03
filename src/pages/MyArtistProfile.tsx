@@ -18,6 +18,7 @@ import { createAlbum } from '@/lib/api/album';
 import type { ArtistCreationPayload, ArtistDetail } from "@/types/artist";
 import type { Album, AlbumCreationPayload } from "@/types/album";
 import type { Concert, ConcertCreationPayload } from "@/types/concert";
+import EmptyState from '@/components/EmptyState';
 
 // --- 장르 스타일링 헬퍼 함수 ---
 const genreColors: Record<string, string> = {
@@ -216,7 +217,7 @@ const MyArtistProfile = () => {
                 </div>
               ))}
             </div>
-          ) : <div className="text-center py-12 text-muted-foreground">공연/행사 정보가 없습니다</div>}
+          ) : <EmptyState icon={Mic} message="공연/행사 정보가 없습니다" description="새로운 공연을 추가해보세요." />}
         </TabsContent>
 
         <TabsContent value="albums" className="mt-6 px-6 pb-6">
@@ -232,10 +233,12 @@ const MyArtistProfile = () => {
                 </div>
               ))}
             </div>
-          ) : <div className="text-center py-12 text-muted-foreground">앨범 정보가 없습니다</div>}
+          ) : <EmptyState icon={PlayCircle} message="앨범 정보가 없습니다" description="새로운 앨범을 추가해보세요." />}
         </TabsContent>
         
-        <TabsContent value="posts" className="mt-6 px-6 pb-6"><div className="text-center py-20"><div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3"><FileText className="w-8 h-8 text-slate-300" /></div><p className="text-muted-foreground text-sm">게시글이 없습니다</p></div></TabsContent>
+        <TabsContent value="posts" className="mt-6 px-6 pb-6">
+          <EmptyState icon={FileText} message="게시글이 없습니다" />
+        </TabsContent>
 
         <TabsContent value="info" className="mt-6 px-6 pb-6 space-y-8">
           <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">소개</h3><div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-foreground whitespace-pre-wrap leading-relaxed text-sm">{artist?.description || "아직 소개가 등록되지 않았습니다."}</p></div></div>
