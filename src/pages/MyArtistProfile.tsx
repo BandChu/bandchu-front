@@ -4,20 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Dialog } from '@/components/ui/dialog';
-import { formatPerformingSchedule, formatDateTime } from '@/lib/utils';
+import { formatPerformingSchedule } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import ArtistProfileForm from '@/components/ArtistProfileForm';
 import AddItemHeader from '@/components/AddItemHeader';
 import ConcertCreationForm from '@/components/ConcertCreationForm';
+import AlbumCreationForm from '@/components/AlbumCreationForm';
 import { getMyArtistProfile, createArtistProfile, updateArtistProfile } from '@/lib/api/artist';
 import { createConcert } from '@/lib/api/concert';
+import { createAlbum } from '@/lib/api/album';
 
 import type { ArtistCreationPayload, ArtistDetail } from "@/types/artist";
-import type { Album } from "@/types/album";
+import type { Album, AlbumCreationPayload } from "@/types/album";
 import type { Concert, ConcertCreationPayload } from "@/types/concert";
 
-// --- 장르 스타일링 헬퍼 함수 (ArtistDetail.tsx에서 가져옴) ---
+// --- 장르 스타일링 헬퍼 함수 ---
 const genreColors: Record<string, string> = {
   'BALLAD': 'bg-blue-50 text-blue-700 border-blue-200', 'DANCE': 'bg-pink-50 text-pink-700 border-pink-200', 'RAP': 'bg-orange-50 text-orange-700 border-orange-200', 'HIPHOP': 'bg-purple-50 text-purple-700 border-purple-200', 'ROCK': 'bg-red-50 text-red-700 border-red-200', 'METAL': 'bg-gray-800 text-gray-100 border-gray-700', 'POP': 'bg-yellow-50 text-yellow-700 border-yellow-200', 'INDIE': 'bg-green-50 text-green-700 border-green-200', 'JAZZ': 'bg-amber-50 text-amber-700 border-amber-200', 'JPOP': 'bg-rose-50 text-rose-700 border-rose-200',
   '발라드': 'bg-blue-50 text-blue-700 border-blue-200', '댄스': 'bg-pink-50 text-pink-700 border-pink-200', '랩': 'bg-orange-50 text-orange-700 border-orange-200', '힙합': 'bg-purple-50 text-purple-700 border-purple-200', '록': 'bg-red-50 text-red-700 border-red-200', '메탈': 'bg-gray-800 text-gray-100 border-gray-700', '팝': 'bg-yellow-50 text-yellow-700 border-yellow-200', '인디': 'bg-green-50 text-green-700 border-green-200', '인디 록': 'bg-green-50 text-green-700 border-green-200', '재즈': 'bg-amber-50 text-amber-700 border-amber-200', '제이팝': 'bg-rose-50 text-rose-700 border-rose-200',
@@ -45,6 +47,7 @@ const MyArtistProfile = () => {
   // Modal states
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isConcertModalOpen, setIsConcertModalOpen] = useState(false);
+  const [isAlbumModalOpen, setIsAlbumModalOpen] = useState(false);
 
   // Data state
   const [artist, setArtist] = useState<ArtistDetail | null>(null);
@@ -117,6 +120,20 @@ const MyArtistProfile = () => {
     }
   };
 
+  const handleAlbumCreate = async (data: AlbumCreationPayload) => {
+    setFormLoading(true);
+    try {
+      await createAlbum(data);
+      toast.success("앨범이 성공적으로 추가되었습니다.");
+      setIsAlbumModalOpen(false);
+      await loadMyProfile();
+    } catch (error) {
+      toast.error("앨범 추가에 실패했습니다.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   if (pageLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -137,8 +154,11 @@ const MyArtistProfile = () => {
       <Dialog open={isConcertModalOpen} onOpenChange={setIsConcertModalOpen}>
         <ConcertCreationForm onSubmit={handleConcertCreate} onClose={() => setIsConcertModalOpen(false)} loading={formLoading} />
       </Dialog>
+      <Dialog open={isAlbumModalOpen} onOpenChange={setIsAlbumModalOpen}>
+        <AlbumCreationForm onSubmit={handleAlbumCreate} onClose={() => setIsAlbumModalOpen(false)} loading={formLoading} />
+      </Dialog>
 
-      {/* 헤더 섹션 */}
+      {/* Header Section */}
       <div className="relative">
         <div className="relative h-[400px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
           {artist?.profileImageUrl ? (
@@ -152,13 +172,11 @@ const MyArtistProfile = () => {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/30 to-black/70" />
-          
           {profileExists && (
             <Button variant="ghost" size="icon" className="absolute top-6 right-4 z-20 bg-white/10 backdrop-blur-md hover:bg-white/20 rounded-full border border-white/20" onClick={() => setIsEditProfileModalOpen(true)}>
               <Edit className="h-5 w-5 text-white" />
             </Button>
           )}
-
           <div className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-8 pt-20">
             <h1 className="text-4xl font-bold text-white mb-3 tracking-tight drop-shadow-lg">{artist?.name || '아티스트'}</h1>
             <p className="text-base text-white/90 mb-4 leading-relaxed line-clamp-2 drop-shadow-md">{artist?.description || '프로필을 생성해주세요.'}</p>
@@ -192,13 +210,7 @@ const MyArtistProfile = () => {
                       {concert.posterImageUrl ? <img src={concert.posterImageUrl} alt={concert.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10"><Mic className="w-8 h-8 text-primary/30" /></div>}
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
-                      <div className="flex-1 space-y-1.5">
-                        <p className="text-xs font-semibold text-primary">{formatPerformingSchedule(concert.performingSchedule.map(s => s.date))}</p>
-                        <h4 className="text-base font-bold text-foreground line-clamp-2 leading-tight">{concert.title}</h4>
-                        <p className="text-sm text-muted-foreground">{concert.place}</p>
-                        {concert.bookingSchedule && concert.bookingSchedule !== 'null' && concert.bookingUrl && <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><CalendarDays className="h-3 w-3" /><span>예매: {formatDateTime(concert.bookingSchedule)}</span></div>}
-                      </div>
-                      {concert.bookingUrl && concert.bookingSchedule && concert.bookingSchedule !== 'null' && <Button size="sm" className="mt-3 self-start px-4 py-1.5 h-8 text-xs font-medium rounded-lg" onClick={(e) => { e.stopPropagation(); window.open(concert.bookingUrl, '_blank', 'noopener,noreferrer'); }}>예매하기</Button>}
+                      <div className="flex-1 space-y-1.5"><p className="text-xs font-semibold text-primary">{formatPerformingSchedule(concert.performingSchedule.map(s => s.date))}</p><h4 className="text-base font-bold text-foreground line-clamp-2 leading-tight">{concert.title}</h4><p className="text-sm text-muted-foreground">{concert.place}</p></div>
                     </div>
                   </div>
                 </div>
@@ -208,8 +220,7 @@ const MyArtistProfile = () => {
         </TabsContent>
 
         <TabsContent value="albums" className="mt-6 px-6 pb-6">
-          {/* 앨범 추가 헤더가 필요하다면 여기에 AddItemHeader 추가 */}
-          <h3 className="text-lg font-bold text-foreground mb-4">앨범</h3>
+          <AddItemHeader title="앨범" buttonText="추가" onButtonClick={() => setIsAlbumModalOpen(true)} />
           {albums.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {albums.map((album) => (
@@ -217,28 +228,19 @@ const MyArtistProfile = () => {
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.03]">
                     {album.coverImageUrl ? <img src={album.coverImageUrl} alt={album.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10"><PlayCircle className="w-12 h-12 text-primary/30" /></div>}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground truncate leading-tight">{album.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(album.releaseDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  </div>
+                  <div><p className="text-sm font-semibold text-foreground truncate leading-tight">{album.name}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(album.releaseDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
                 </div>
               ))}
             </div>
           ) : <div className="text-center py-12 text-muted-foreground">앨범 정보가 없습니다</div>}
         </TabsContent>
         
-        <TabsContent value="posts" className="mt-6 px-6 pb-6">
-          <div className="text-center py-20"><div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3"><FileText className="w-8 h-8 text-slate-300" /></div><p className="text-muted-foreground text-sm">게시글이 없습니다</p></div>
-        </TabsContent>
+        <TabsContent value="posts" className="mt-6 px-6 pb-6"><div className="text-center py-20"><div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3"><FileText className="w-8 h-8 text-slate-300" /></div><p className="text-muted-foreground text-sm">게시글이 없습니다</p></div></TabsContent>
 
         <TabsContent value="info" className="mt-6 px-6 pb-6 space-y-8">
           <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">소개</h3><div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-foreground whitespace-pre-wrap leading-relaxed text-sm">{artist?.description || "아직 소개가 등록되지 않았습니다."}</p></div></div>
-          <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">장르</h3>
-            {artist?.genre && artist.genre.length > 0 ? <div className="flex flex-wrap gap-2">{artist.genre.map((g) => <span key={g} className={`px-4 py-2 text-sm font-medium rounded-full border transition-all hover:scale-105 ${getGenreColorClass(g)}`}>{g}</span>)}</div> : <div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-sm text-muted-foreground">다양한 장르의 음악을 하고 있어요.</p></div>}
-          </div>
-          <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">SNS</h3>
-            {artist?.sns && artist.sns.length > 0 ? <div className="space-y-2">{artist.sns.map((s) => <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-border/30 shadow-sm hover:shadow-md transition-all hover:border-primary/30 group"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-primary/10 transition-colors"><Link className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" /></div><span className="font-semibold text-foreground text-sm">{s.platform}</span></a>)}</div> : <div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-sm text-muted-foreground">아직 SNS 정보를 등록하지 않았어요.</p></div>}
-          </div>
+          <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">장르</h3>{artist?.genre && artist.genre.length > 0 ? <div className="flex flex-wrap gap-2">{artist.genre.map((g) => <span key={g} className={`px-4 py-2 text-sm font-medium rounded-full border transition-all hover:scale-105 ${getGenreColorClass(g)}`}>{g}</span>)}</div> : <div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-sm text-muted-foreground">다양한 장르의 음악을 하고 있어요.</p></div>}</div>
+          <div className="space-y-4"><h3 className="text-lg font-bold text-foreground">SNS</h3>{artist?.sns && artist.sns.length > 0 ? <div className="space-y-2">{artist.sns.map((s) => <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-border/30 shadow-sm hover:shadow-md transition-all hover:border-primary/30 group"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-primary/10 transition-colors"><Link className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" /></div><span className="font-semibold text-foreground text-sm">{s.platform}</span></a>)}</div> : <div className="bg-white rounded-2xl p-6 border border-border/30 shadow-sm"><p className="text-sm text-muted-foreground">아직 SNS 정보를 등록하지 않았어요.</p></div>}</div>
         </TabsContent>
       </Tabs>
     </div>
