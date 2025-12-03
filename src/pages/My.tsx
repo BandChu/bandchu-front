@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -22,14 +22,17 @@ import {
   ChevronRight,
   LogOut,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Users,
+  UserCheck
 } from "lucide-react";
-import { logout } from "@/lib/api/auth";
+import { getFriendRequests, FriendResponse } from "@/lib/api/friends";
 import { toast } from "sonner";
 
 const My = () => {
   const navigate = useNavigate();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
   // localStorage에서 사용자 정보 가져오기
   const userInfo = {
@@ -39,17 +42,28 @@ const My = () => {
     role: (localStorage.getItem('userRole') as "FAN" | "ARTIST") || "FAN"
   };
 
+  // 받은 친구 요청 수 조회
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      try {
+        const requests = await getFriendRequests();
+        // 받은 요청 중 PENDING 상태인 것만 카운트
+        const pendingCount = requests.filter(
+          req => !req.isSentByMe && req.status === 'PENDING'
+        ).length;
+        setPendingRequestCount(pendingCount);
+      } catch (error) {
+        console.error('친구 요청 조회 실패:', error);
+      }
+    };
+
+    fetchPendingRequests();
+  }, []);
+
   const handleLogout = async () => {
-    setIsLogoutDialogOpen(false); // 다이얼로그 먼저 닫기
+    setIsLogoutDialogOpen(false);
     
-    try {
-      await logout();
-    } catch (error: any) {
-      // API 호출 실패해도 로컬 정리 후 로그아웃 처리
-      console.error('로그아웃 API 에러:', error);
-    }
-    
-    // API 호출 성공 여부와 관계없이 로컬 정리 후 로그아웃 처리
+    // 로컬 정리 후 로그아웃 처리
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
@@ -62,6 +76,17 @@ const My = () => {
   };
 
   const menuItems = [
+    {
+      icon: UserCheck,
+      label: "내 친구 목록",
+      onClick: () => navigate('/my/friends')
+    },
+    {
+      icon: Users,
+      label: "친구 요청",
+      badge: pendingRequestCount > 0 ? pendingRequestCount : undefined,
+      onClick: () => navigate('/my/friend-requests')
+    },
     {
       icon: Settings,
       label: "설정",
@@ -138,6 +163,11 @@ const My = () => {
                       <span className="flex-1 text-left font-medium text-foreground">
                         {item.label}
                       </span>
+                      {item.badge && (
+                        <span className="bg-destructive text-destructive-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
                       <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     </button>
                     {index < menuItems.length - 1 && (

@@ -12,7 +12,7 @@ export interface LoginResponse {
 
 export interface SignupRequest {
   email: string;
-  password: string;
+  password: string
   nickname: string;
   role: 'FAN' | 'ARTIST';
 }

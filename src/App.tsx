@@ -15,11 +15,14 @@ import PostDetail from "./pages/PostDetail";
 import Feed from "./pages/Feed";
 import Chatting from "./pages/Chatting";
 import ChatRoom from "./pages/ChatRoom";
+import FriendList from "./pages/FriendList";
 import My from "./pages/My";
 import Auth from "./pages/Auth";
+import PostEdit from "./pages/PostEdit";
 import Login from "./pages/Login";
 import SignupType from "./pages/SignupType";
 import SignupForm from "./pages/SignupForm";
+import FriendRequests from "./pages/FriendRequest";
 import ProfileSetup from "./pages/ProfileSetup";
 import EmailVerification from "./pages/EmailVerification";
 import AccountDelete from "./pages/AccountDelete";
@@ -55,13 +58,16 @@ const AnimatedRoutes = () => {
         <Route path="/board/:boardId" element={<BoardList />} />
          <Route path="/board/:boardId/create" element={<PostCreate />} />
         <Route path="/board/:boardId/post/:postId" element={<PostDetail />} />
+         <Route path="/board/:boardId/post/:postId/edit" element={<PostEdit />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/chatting" element={<Chatting />} />
         <Route path="/chat/:roomId" element={<ChatRoom />} />
         <Route path="/my" element={<My />} />
+         <Route path="/my/friend-requests" element={<FriendRequests />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup/type" element={<SignupType />} />
+        <Route path="/my/friends" element={<FriendList />} />
         <Route path="/signup/form" element={<SignupForm />} />
         <Route path="/signup/profile" element={<ProfileSetup />} />
         <Route path="/signup/verify" element={<EmailVerification />} />
