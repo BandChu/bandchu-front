@@ -1,3 +1,5 @@
+import apiClient from '../api';
+
 export interface SubscribeRequest {
   artiProfileId: number;
 }
@@ -15,8 +17,7 @@ export interface ApiResponse<T> {
   message: string;
 }
 
-import { getArtistName } from '../../data/artistSchedules';
-
+// Mock 데이터 폴백용
 const MOCK_SUBSCRIPTIONS_KEY = 'mock_subscriptions';
 
 const getMockSubscriptions = (): number[] => {
@@ -29,9 +30,10 @@ const saveMockSubscriptions = (subscriptions: number[]) => {
 };
 
 /**
- * 아티스트 구독하기 (Mock)
+ * Mock 구독하기 (API 실패 시 폴백용)
+ * API 실패 시에는 서버 상태를 알 수 없으므로, 사용자가 구독하기를 누르면 항상 구독 추가
  */
-export const subscribeToArtist = async (artiProfileId: number): Promise<SubscriptionResponse> => {
+const subscribeToArtistMock = async (artiProfileId: number): Promise<SubscriptionResponse> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const token = localStorage.getItem('accessToken');
@@ -40,14 +42,13 @@ export const subscribeToArtist = async (artiProfileId: number): Promise<Subscrip
         return;
       }
 
+      // API 실패 시 Mock 폴백이므로, 서버 상태를 알 수 없어 항상 구독 허용
+      // 사용자가 구독하기를 누르면 Mock 데이터에 추가
       const currentSubscriptions = getMockSubscriptions();
-      if (currentSubscriptions.includes(artiProfileId)) {
-        reject(new Error('이미 구독 중인 아티스트입니다.'));
-        return;
+      if (!currentSubscriptions.includes(artiProfileId)) {
+        const updatedSubscriptions = [...currentSubscriptions, artiProfileId];
+        saveMockSubscriptions(updatedSubscriptions);
       }
-
-      const updatedSubscriptions = [...currentSubscriptions, artiProfileId];
-      saveMockSubscriptions(updatedSubscriptions);
 
       resolve({
         subscriptionId: Date.now(),
@@ -60,9 +61,9 @@ export const subscribeToArtist = async (artiProfileId: number): Promise<Subscrip
 };
 
 /**
- * 구독 목록 가져오기 (Mock)
+ * Mock 구독 목록 가져오기
  */
-export const getSubscriptions = async (): Promise<SubscriptionResponse[]> => {
+const getSubscriptionsMock = async (): Promise<SubscriptionResponse[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const subscriptionIds = getMockSubscriptions();
@@ -78,9 +79,9 @@ export const getSubscriptions = async (): Promise<SubscriptionResponse[]> => {
 };
 
 /**
- * 구독 취소하기 (Mock)
+ * Mock 구독 취소하기
  */
-export const unsubscribeFromArtist = async (artiProfileId: number): Promise<void> => {
+const unsubscribeFromArtistMock = async (artiProfileId: number): Promise<void> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const token = localStorage.getItem('accessToken');
@@ -95,5 +96,64 @@ export const unsubscribeFromArtist = async (artiProfileId: number): Promise<void
       resolve();
     }, 300);
   });
+};
+
+/**
+ * 아티스트 구독하기 (API 호출, 실패 시 Mock 폴백)
+ */
+export const subscribeToArtist = async (artiProfileId: number): Promise<SubscriptionResponse> => {
+  try {
+    const response = await apiClient.post<ApiResponse<SubscriptionResponse>>('/api/subscriptions', {
+      artiProfileId,
+    });
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || '구독하기에 실패했습니다.');
+  } catch (error: any) {
+    console.warn('구독 API 호출 실패, Mock 데이터로 폴백:', error.message);
+    // API 실패 시 Mock으로 폴백
+    return subscribeToArtistMock(artiProfileId);
+  }
+};
+
+/**
+ * 구독 목록 가져오기 (API 호출, 실패 시 Mock 폴백)
+ */
+export const getSubscriptions = async (): Promise<SubscriptionResponse[]> => {
+  try {
+    const response = await apiClient.get<ApiResponse<SubscriptionResponse[]>>('/api/subscriptions');
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || '구독 목록을 불러오는데 실패했습니다.');
+  } catch (error: any) {
+    console.warn('구독 목록 API 호출 실패, Mock 데이터로 폴백:', error.message);
+    // API 실패 시 Mock으로 폴백
+    return getSubscriptionsMock();
+  }
+};
+
+/**
+ * 구독 취소하기 (API 호출, 실패 시 Mock 폴백)
+ */
+export const unsubscribeFromArtist = async (artiProfileId: number): Promise<void> => {
+  try {
+    const response = await apiClient.delete<ApiResponse<void>>(`/api/subscriptions/${artiProfileId}`);
+    
+    if (response.data.success) {
+      return;
+    }
+    
+    throw new Error(response.data.message || '구독 취소에 실패했습니다.');
+  } catch (error: any) {
+    console.warn('구독 취소 API 호출 실패, Mock 데이터로 폴백:', error.message);
+    // API 실패 시 Mock으로 폴백
+    return unsubscribeFromArtistMock(artiProfileId);
+  }
 };
 

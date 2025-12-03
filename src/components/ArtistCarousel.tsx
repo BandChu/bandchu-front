@@ -5,11 +5,14 @@ import { subscribeToArtist, unsubscribeFromArtist, getSubscriptions } from "@/li
 import { toast } from "sonner";
 import { getAllArtists } from "@/data/artistSchedules";
 import { Badge } from "@/components/ui/badge";
+import apiClient from "@/lib/api";
+import { ArtistsApiResponse, ArtistDetail } from "@/types/artist";
 
 interface Artist {
   id: number;
   name: string;
   image?: string;
+  profileImageUrl?: string;
   isFollowing: boolean;
   genre?: string[];
   description?: string;
@@ -67,6 +70,75 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
   const [artists, setArtists] = useState<Artist[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // 구독된 아티스트 목록 로드 (API에서 description 포함)
+  const loadSubscribedArtists = async () => {
+    try {
+      // 먼저 API를 통해 실제 아티스트 목록 가져오기
+      const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
+      if (response.data.success && response.data.data.artists) {
+        // 구독 목록 가져오기
+        const subscriptions = await getSubscriptions();
+        const subscribedIds = new Set(subscriptions.map(s => s.artiProfileId));
+        
+        // 구독된 아티스트만 필터링하고, 각 아티스트의 상세 정보 가져오기
+        const subscribedArtistsPromises = response.data.data.artists
+          .filter(artist => subscribedIds.has(artist.artistId))
+          .map(async (artist) => {
+            try {
+              // 각 아티스트의 상세 정보 가져오기 (description 포함)
+              const detailResponse = await apiClient.get<{ success: boolean; data: ArtistDetail; message: string }>(
+                `/api/artists/${artist.artistId}`
+              );
+              if (detailResponse.data.success) {
+                return {
+                  id: artist.artistId,
+                  name: artist.name,
+                  profileImageUrl: detailResponse.data.data.profileImageUrl || artist.profileImageUrl,
+                  description: detailResponse.data.data.description || artistDescriptions[artist.artistId] || '',
+                  genre: detailResponse.data.data.genre || artistGenres[artist.artistId] || [],
+                };
+              }
+            } catch (e) {
+              // 상세 정보 가져오기 실패 시 기본 정보만 사용
+            }
+            return {
+              id: artist.artistId,
+              name: artist.name,
+              profileImageUrl: artist.profileImageUrl,
+              description: artistDescriptions[artist.artistId] || '',
+              genre: artistGenres[artist.artistId] || [],
+            };
+          });
+        
+        const subscribedArtists = await Promise.all(subscribedArtistsPromises);
+        setArtists(subscribedArtists.map(artist => ({
+          ...artist,
+          isFollowing: true,
+        })));
+        return;
+      } else {
+        throw new Error(response.data.message || '아티스트 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.warn('아티스트 목록 API 호출 실패, Mock 데이터로 폴백:', error.message);
+      // API 실패 시 Mock 데이터로 폴백
+      const allArtistsData = getAllArtists();
+      const subscriptions = await getSubscriptions();
+      const subscribedIds = new Set(subscriptions.map(s => s.artiProfileId));
+      
+      const subscribedArtists = allArtistsData
+        .filter(artist => subscribedIds.has(artist.id))
+        .map(artist => ({
+          ...artist,
+          isFollowing: true,
+          genre: artistGenres[artist.id] || [],
+          description: artistDescriptions[artist.id] || '',
+        }));
+      
+      setArtists(subscribedArtists);
+    }
+  };
+
   useEffect(() => {
     const loadSubscriptions = async () => {
       const token = localStorage.getItem('accessToken');
@@ -76,20 +148,7 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
       }
 
       try {
-        const subscriptions = await getSubscriptions();
-        const subscribedIds = new Set(subscriptions.map(s => s.artiProfileId));
-        
-        const allArtistsData = getAllArtists();
-        const subscribedArtists = allArtistsData
-          .filter(artist => subscribedIds.has(artist.id))
-          .map(artist => ({
-            ...artist,
-            isFollowing: true,
-            genre: artistGenres[artist.id] || [],
-            description: artistDescriptions[artist.id] || '',
-          }));
-        
-        setArtists(subscribedArtists);
+        await loadSubscribedArtists();
       } catch (error) {
         console.error('구독 목록 로드 실패:', error);
         setArtists([]);
@@ -125,18 +184,8 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
         toast.success(`${artist.name}을(를) 구독했습니다.`);
       }
       
-      const subscriptions = await getSubscriptions();
-      const subscribedIds = new Set(subscriptions.map(s => s.artiProfileId));
-      const allArtistsData = getAllArtists();
-      const subscribedArtists = allArtistsData
-        .filter(artist => subscribedIds.has(artist.id))
-        .map(artist => ({
-          ...artist,
-          isFollowing: true,
-          genre: artistGenres[artist.id] || [],
-          description: artistDescriptions[artist.id] || '',
-        }));
-      setArtists(subscribedArtists);
+      // 구독 목록 다시 로드
+      await loadSubscribedArtists();
       
       window.dispatchEvent(new CustomEvent('subscriptionChanged'));
     } catch (error: any) {

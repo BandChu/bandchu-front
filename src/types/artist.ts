@@ -13,7 +13,7 @@ export interface ArtistDetail {
 }
 
 export interface Artist {
-  id: number;
+  artistId: number;
   name: string;
   profileImageUrl: string;
   createdAt: string;

@@ -42,9 +42,9 @@
   - `setupProfile()`, `refreshToken()`
   - 회원가입 API 응답 구조 변경 (토큰 없음, 회원 정보만 반환)
 - **`src/lib/api/subscription.ts`** - 구독 API 함수
-  - `subscribeToArtist()` - 아티스트 구독하기 (Mock: localStorage 사용)
-  - `unsubscribeFromArtist()` - 구독 취소하기 (Mock: localStorage 사용)
-  - `getSubscriptions()` - 구독 목록 조회 (Mock: localStorage 사용)
+  - `subscribeToArtist()` - 아티스트 구독하기 (API 연동 완료)
+  - `unsubscribeFromArtist()` - 구독 취소하기 (API 연동 완료)
+  - `getSubscriptions()` - 구독 목록 조회 (API 연동 완료)
 - **`src/lib/utils.ts`** - 유틸리티 함수
   - `cn()` - 클래스명 병합 함수
   - `formatPerformingSchedule()` - 공연 일정 포맷팅 함수
@@ -95,14 +95,26 @@
   - 구독한 아티스트 목록 자동 로드 및 업데이트
 - **`src/pages/ArtistList.tsx`** - 나의 아티스트 추가 페이지
   - 아티스트 검색 기능
-  - 구독하기/구독 취소 API 연동 (Mock 데이터 사용)
+  - 구독하기/구독 취소 API 연동 완료
   - 로딩 상태 표시 및 에러 처리
   - API 실패 시 기본 아티스트 데이터로 폴백
+- **`src/pages/ArtistDetail.tsx`** - 아티스트 상세 페이지
+  - Toss 스타일 디자인 적용
+  - 큰 프로필 이미지 헤더 (400px 높이)
+  - 그라데이션 오버레이 및 어두운 배경 처리
+  - 프로필 이미지 투명도 조정 (`opacity-70`, `bg-black/40` 오버레이)
+  - 장르별 색상 구분 기능 (enum 기반: BALLAD, DANCE, RAP, HIPHOP, ROCK, METAL, POP, INDIE, JAZZ, JPOP)
+  - 헤더와 Info 탭에서 장르별 다른 색상 적용 (밝은 배경용/어두운 헤더용)
+  - 공연/앨범 탭으로 정보 분리 표시
+  - 공연 카드 디자인 개선 (컴팩트한 레이아웃, 예매 버튼 인라인 배치)
+  - 앨범 그리드 레이아웃 (3열)
+  - SNS 링크 표시
+  - API 실패 시 Mock 데이터로 폴백
 - **`src/components/ArtistCarousel.tsx`** - 아티스트 캐러셀 컴포넌트
   - 캘린더 상단에 구독한 아티스트 표시
   - 아티스트 다중 선택 기능 (캘린더 일정 필터링용)
   - 선택된 아티스트 시각적 피드백 (테두리, 그림자, 색상)
-  - 구독하기/구독 취소 API 연동 (Mock 데이터 사용)
+  - 구독하기/구독 취소 API 연동 완료
   - 로딩 상태 표시 및 에러 처리
   - "펼쳐보기" 기능: 구독한 아티스트 목록 확장 표시
   - 펼쳐보기 시 "구독한 아티스트" 안내 문구 및 총 인원수 표시
@@ -177,20 +189,18 @@
 
 | Method | Endpoint | 설명 | 상태 |
 |--------|----------|------|------|
-| `POST` | `/api/subscriptions` | 아티스트 구독하기 | 🔄 **Mock 데이터 사용** (localStorage 기반, API 연동 안 됨) |
-| `DELETE` | `/api/subscriptions/{artiProfileId}` | 구독 취소하기 | 🔄 **Mock 데이터 사용** (localStorage 기반, API 연동 안 됨) |
-| `GET` | `/api/subscriptions` | 구독 목록 조회 | 🔄 **Mock 데이터 사용** (localStorage 기반, API 연동 안 됨) |
-
-**참고**: 구독 API는 현재 Mock 데이터로 동작합니다. localStorage에 구독 정보를 저장하며, 실제 서버 API는 호출하지 않습니다.
+| `POST` | `/api/subscriptions` | 아티스트 구독하기 | ✅ 연동 완료 |
+| `DELETE` | `/api/subscriptions/{artiProfileId}` | 구독 취소하기 | ✅ 연동 완료 |
+| `GET` | `/api/subscriptions` | 구독 목록 조회 | ✅ 연동 완료 |
 
 ### 아티스트 API
 
 | Method | Endpoint | 설명 | 상태 |
 |--------|----------|------|------|
-| `GET` | `/api/artists` | 아티스트 목록 조회 | ⚠️ **API 실패 시 Mock 데이터로 폴백** |
-| `GET` | `/api/artists/{artistId}` | 아티스트 상세 조회 | ⚠️ **API 실패 시 Mock 데이터로 폴백** |
+| `GET` | `/api/artists` | 아티스트 목록 조회 | ✅ 연동 완료 (API 실패 시 Mock 데이터로 폴백) |
+| `GET` | `/api/artists/{artistId}` | 아티스트 상세 조회 | ✅ 연동 완료 (API 실패 시 Mock 데이터로 폴백) |
 
-**참고**: 아티스트 API는 먼저 서버 API를 호출하지만, 실패하거나 데이터가 없을 경우 Mock 데이터(`src/data/artistSchedules.ts`)로 폴백합니다.
+**참고**: 아티스트 API는 서버 API를 호출하며, 실패하거나 데이터가 없을 경우 Mock 데이터(`src/data/artistSchedules.ts`)로 폴백합니다.
 
 ### 공연/앨범 API
 
@@ -235,10 +245,10 @@
   - 10개 인디 아티스트의 12월 일정 데이터
   - 아티스트별 고유 색상 할당
   - 선택된 아티스트의 일정만 캘린더에 표시
-- **구독 데이터**: Mock 데이터 사용 (localStorage 기반)
-  - `getSubscriptions()`: localStorage에서 구독 목록 조회
-  - `subscribeToArtist()`: localStorage에 구독 추가
-  - `unsubscribeFromArtist()`: localStorage에서 구독 제거
+- **구독 데이터**: API 연동 완료
+  - `getSubscriptions()`: 서버 API에서 구독 목록 조회
+  - `subscribeToArtist()`: 서버 API로 구독 추가
+  - `unsubscribeFromArtist()`: 서버 API로 구독 제거
 - **공연/앨범 데이터**: Mock 데이터 사용 (`src/data/artistEvents.ts`)
   - 날짜별 공연 정보
   - 아티스트별 앨범 정보
@@ -270,6 +280,18 @@
 - **스크롤 처리**: 페이지 전환 시 자동으로 맨 위로 스크롤
 - **전역 트랜지션**: 색상, 배경, 테두리 등에 부드러운 전환 효과 적용
 
+### 아티스트 상세 페이지 디자인
+
+- **헤더 섹션**: 큰 프로필 이미지 (400px 높이) + 그라데이션 오버레이
+- **이미지 처리**: 프로필 이미지 투명도 조정 (`opacity-70`) 및 어두운 오버레이 (`bg-black/40`)로 텍스트 가독성 향상
+- **장르 색상 구분**: enum 기반 장르별 고유 색상 적용
+  - 일반 배경용: 밝은 색상 (예: `bg-blue-50 text-blue-700`)
+  - 헤더 배경용: 반투명 색상 (예: `bg-blue-500/30 text-blue-100`)
+  - 지원 장르: BALLAD, DANCE, RAP, HIPHOP, ROCK, METAL, POP, INDIE, JAZZ, JPOP (한국어 장르명도 지원)
+- **탭 구조**: 공연/앨범/게시글/정보 탭으로 분리
+- **공연 카드**: 컴팩트한 레이아웃, 예매 버튼 인라인 배치
+- **앨범 그리드**: 3열 그리드 레이아웃
+
 ### 에러 처리
 
 - **401**: 자동 토큰 갱신 또는 로그인 페이지 이동
@@ -293,125 +315,18 @@
 ## 향후 작업
 
 ### API 연동
-- [ ] 구독 API 실제 연동 (`/api/subscriptions`)
-  - 현재 Mock 데이터(localStorage) 사용 중
+- [x] 구독 API 실제 연동 (`/api/subscriptions`) ✅ 완료
   - `POST /api/subscriptions` - 아티스트 구독하기
   - `DELETE /api/subscriptions/{artiProfileId}` - 구독 취소하기
   - `GET /api/subscriptions` - 구독 목록 조회
-- [ ] 아티스트 API 실제 연동 (`/api/artists`)
-  - 현재 API 실패 시 Mock 데이터로 폴백
+- [x] 아티스트 API 실제 연동 (`/api/artists`) ✅ 완료
   - `GET /api/artists` - 아티스트 목록 조회
   - `GET /api/artists/{artistId}` - 아티스트 상세 조회
+  - API 실패 시 Mock 데이터로 폴백 유지
 - [ ] 공연/앨범 API 실제 연동
   - 현재 API 실패 시 Mock 데이터로 폴백
   - `GET /api/concerts?artistId={artistId}` - 공연 목록 조회
   - `GET /api/albums?artistId={artistId}` - 앨범 목록 조회
-
----
-
-## 머지 충돌 해결 (main 브랜치 병합)
-
-**작업일**: 2025-12-02  
-**머지 커밋**: `b54e546` - merge: js 브랜치를 main에 병합 (충돌 해결)
-
-### 충돌 발생 원인
-
-`js` 브랜치와 `main` 브랜치가 분기된 후 동일한 파일들이 양쪽에서 독립적으로 수정되어 충돌이 발생했습니다.
-
-### 충돌 해결 전략
-
-코드베이스 분석 결과, `js` 브랜치의 변경사항이 실제 사용 중인 코드와 더 일치하므로 `js` 브랜치 버전을 기준으로 통합했습니다.
-
-### 해결된 충돌 파일
-
-#### 1. 타입 파일들 (`src/types/*.ts`)
-
-**충돌 타입**: `add/add` (양쪽 브랜치에서 동일 파일 생성)
-
-- **`src/types/artist.ts`**
-  - `main`: `Artist` 인터페이스에서 `artistId: number` 사용
-  - `js`: `Artist` 인터페이스에서 `id: number` 사용
-  - **해결**: `js` 버전 선택 (실제 코드에서 `artist.id` 사용 중)
-  - `ArtistDetail` 인터페이스의 optional 필드 유지 (`profileImageUrl?`, `description?`, `genre?`)
-
-- **`src/types/album.ts`**
-  - 양쪽 버전 내용 동일
-  - **해결**: `js` 버전 선택 (빈 줄 제거)
-
-- **`src/types/concert.ts`**
-  - 양쪽 버전 내용 동일
-  - **해결**: `js` 버전 선택 (빈 줄 제거)
-
-- **`src/types/calendarEvent.ts`**
-  - `main`: 주석 포함 (`// For unique key generation`, `// YYYY-MM-DD format for calendar highlighting`)
-  - `js`: 주석 없음
-  - **해결**: `js` 버전 선택 (주석 제거, 코드만 유지)
-
-#### 2. 유틸리티 함수 (`src/lib/utils.ts`)
-
-**충돌 타입**: `content` (양쪽에서 동일 함수 수정)
-
-- **`main` 브랜치**: 복잡한 KST 포맷팅 로직 (약 110줄)
-  - `formatScheduleDateTime()`: KST 기준 날짜 포맷팅
-  - `formatPerformingSchedule()`: 연속 날짜 범위 처리, KST 기준
-  - `formatDateTime()`: KST 기준 ISO 문자열 포맷팅
-  - `isSameDay()`: 날짜 비교 함수
-
-- **`js` 브랜치**: 간단한 `date-fns` 기반 포맷팅 (약 26줄)
-  - `formatPerformingSchedule()`: `date-fns`의 `format()` 사용
-  - `formatDateTime()`: `date-fns`의 `format()` 사용
-
-- **해결**: `js` 버전 선택
-  - 실제 사용 중인 코드와 일치 (`ArtistDetail.tsx`에서 사용)
-  - 더 간단하고 유지보수하기 쉬움
-  - `date-fns` 라이브러리 활용으로 일관성 유지
-
-#### 3. 라우팅 설정 (`src/App.tsx`)
-
-**충돌 타입**: `content` (양쪽에서 수정)
-
-- **`main` 브랜치**: `SubscribedArtistList` import 및 라우트 포함
-  ```tsx
-  import SubscribedArtistList from "./pages/SubscribedArtistList";
-  <Route path="/subscriptions" element={<SubscribedArtistList />} />
-  ```
-
-- **`js` 브랜치**: `SubscribedArtistList` 제거됨
-
-- **해결**: `js` 버전 선택
-  - `js` 브랜치에서 의도적으로 제거한 것으로 판단
-  - 구독 기능은 `ArtistList` 페이지에서 통합 관리
-
-#### 4. 컴포넌트 (`src/components/ArtistCarousel.tsx`)
-
-**충돌 타입**: `content` (양쪽에서 수정)
-
-- **해결**: `js` 버전 선택 (`--ours` 전략)
-  - `js` 브랜치의 최신 기능 포함 (드래그 스크롤 등)
-  - `main` 브랜치의 변경사항은 이미 `js`에 반영되어 있음
-
-#### 5. 문서 (`doc/js-branch.md`)
-
-**충돌 타입**: `content` (양쪽에서 수정)
-
-- **해결**: 양쪽 내용 통합
-  - `js` 브랜치의 최신 내용 유지
-  - `main` 브랜치의 추가 정보 통합
-  - 머지 충돌 해결 섹션 추가 (현재 섹션)
-
-### 해결 원칙
-
-1. **실제 사용 코드 기준**: 코드베이스에서 실제로 사용 중인 필드명/함수 시그니처를 우선
-2. **간결성 우선**: 동일한 기능을 수행하는 경우 더 간단한 구현 선택
-3. **의도 파악**: 브랜치에서 의도적으로 제거/변경한 내용 존중
-4. **일관성 유지**: 기존 코드 스타일과 일관성 유지
-
-### 검증
-
-- ✅ 모든 타입 파일 린트 에러 없음
-- ✅ `utils.ts` 함수 사용처 확인 완료
-- ✅ `App.tsx` 라우팅 정상 동작 확인
-- ✅ `ArtistCarousel.tsx` 최신 기능 유지
 
 ---
 

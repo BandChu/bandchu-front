@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import apiClient from "@/lib/api";
+import { ArtistsApiResponse } from "@/types/artist";
 
 interface SearchResult {
   id: number;
@@ -15,27 +17,49 @@ interface SearchResult {
 const Search = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [artists, setArtists] = useState<{ id: number; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock search results
+  useEffect(() => {
+    const loadArtists = async () => {
+      setLoading(true);
+      try {
+        // API를 통해 실제 아티스트 목록 가져오기
+        const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
+        if (response.data.success && response.data.data.artists) {
+          const apiArtists = response.data.data.artists.map(artist => ({
+            id: artist.artistId,
+            name: artist.name,
+          }));
+          setArtists(apiArtists);
+        }
+      } catch (error: any) {
+        console.warn('아티스트 목록 API 호출 실패:', error.message);
+        setArtists([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadArtists();
+  }, []);
+
+  // 검색 결과 필터링
   const getSearchResults = (query: string): SearchResult[] => {
     if (!query) return [];
 
-    const allResults: SearchResult[] = [
-      { id: 1, type: "artist", name: "실리카겔" },
-      { id: 2, type: "artist", name: "실리카코" },
-      {
-        id: 3,
-        type: "event",
-        name: "실리카코 공연",
-        subtitle: "12.27(토) | 콘서트 | 일산 킨텍스",
-      },
-    ];
+    const artistResults: SearchResult[] = artists
+      .filter(artist => artist.name.toLowerCase().includes(query.toLowerCase()))
+      .map(artist => ({
+        id: artist.id,
+        type: "artist" as const,
+        name: artist.name,
+      }));
 
-    return allResults.filter(
-      (result) =>
-        result.name.toLowerCase().includes(query.toLowerCase()) ||
-        result.subtitle?.toLowerCase().includes(query.toLowerCase())
-    );
+    // TODO: 공연/행사 검색은 추후 API 연동 시 추가
+    // const eventResults: SearchResult[] = [];
+
+    return artistResults;
   };
 
   const results = getSearchResults(searchQuery);
@@ -67,7 +91,11 @@ const Search = () => {
       </header>
 
       <main className="px-6 py-4">
-        {searchQuery && results.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">
+            로딩 중...
+          </div>
+        ) : searchQuery && results.length > 0 ? (
           <div className="space-y-2">
             {results.map((result) => (
               <Card

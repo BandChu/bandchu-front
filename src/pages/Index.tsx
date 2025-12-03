@@ -8,11 +8,14 @@ import { getAllEventDates } from "@/data/artistSchedules";
 import { getSubscriptions } from "@/lib/api/subscription";
 import { getEventsByDate } from "@/data/artistEvents";
 import { CalendarEvent } from "@/types/calendarEvent";
+import apiClient from "@/lib/api";
+import { ArtistsApiResponse } from "@/types/artist";
 
 const Index = () => {
   const [selectedArtistIds, setSelectedArtistIds] = useState<number[]>([]);
   const [subscribedArtistIds, setSubscribedArtistIds] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [artistNameMap, setArtistNameMap] = useState<Record<number, string>>({});
   
   // 선택된 아티스트가 없으면 빈 배열 (아무것도 표시 안 함)
   const eventDates = selectedArtistIds.length > 0
@@ -21,10 +24,27 @@ const Index = () => {
   
   // 선택된 날짜의 이벤트 가져오기
   const selectedDateEvents: CalendarEvent[] = selectedDate && selectedArtistIds.length > 0
-    ? getEventsByDate(selectedDate, selectedArtistIds)
+    ? getEventsByDate(selectedDate, selectedArtistIds, artistNameMap)
     : [];
 
   useEffect(() => {
+    const loadArtists = async () => {
+      try {
+        // API를 통해 실제 아티스트 목록 가져오기
+        const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
+        if (response.data.success && response.data.data.artists) {
+          const nameMap: Record<number, string> = {};
+          response.data.data.artists.forEach(artist => {
+            nameMap[artist.artistId] = artist.name;
+          });
+          setArtistNameMap(nameMap);
+        }
+      } catch (error: any) {
+        console.warn('아티스트 목록 API 호출 실패:', error.message);
+        // API 실패 시 빈 맵 사용 (하드코딩된 데이터로 폴백)
+      }
+    };
+
     const loadSubscriptions = async () => {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -42,6 +62,7 @@ const Index = () => {
       }
     };
 
+    loadArtists();
     loadSubscriptions();
 
     const handleSubscriptionChange = () => {

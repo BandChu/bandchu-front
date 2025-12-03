@@ -8,10 +8,13 @@ import Header from "@/components/Header";
 import { subscribeToArtist, unsubscribeFromArtist, getSubscriptions } from "@/lib/api/subscription";
 import { toast } from "sonner";
 import { getAllArtists } from "@/data/artistSchedules";
+import apiClient from "@/lib/api";
+import { ArtistsApiResponse } from "@/types/artist";
 
 interface Artist {
   id: number;
   name: string;
+  profileImageUrl?: string;
   isFollowing: boolean;
 }
 
@@ -20,16 +23,40 @@ const ArtistList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadArtists = async () => {
-      const allArtistsData = getAllArtists();
-      const initialArtists: Artist[] = allArtistsData.map(artist => ({
-        ...artist,
-        isFollowing: false,
-      }));
-      setArtists(initialArtists);
+      setLoading(true);
+      try {
+        // 먼저 API 호출 시도
+        const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
+        
+        if (response.data.success && response.data.data.artists) {
+          const apiArtists: Artist[] = response.data.data.artists.map(artist => ({
+            id: artist.artistId,
+            name: artist.name,
+            profileImageUrl: artist.profileImageUrl,
+            isFollowing: false,
+          }));
+          setArtists(apiArtists);
+        } else {
+          throw new Error(response.data.message || '아티스트 목록을 불러오는데 실패했습니다.');
+        }
+      } catch (error: any) {
+        console.warn('아티스트 목록 API 호출 실패, Mock 데이터로 폴백:', error.message);
+        // API 실패 시 Mock 데이터로 폴백
+        const allArtistsData = getAllArtists();
+        const mockArtists: Artist[] = allArtistsData.map(artist => ({
+          ...artist,
+          isFollowing: false,
+        }));
+        setArtists(mockArtists);
+      } finally {
+        setLoading(false);
+      }
 
+      // 구독 상태 업데이트
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
@@ -131,7 +158,12 @@ const ArtistList = () => {
         </div>
 
         {/* 아티스트 목록 */}
-        {filteredArtists.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-500">아티스트 목록을 불러오는 중...</p>
+          </div>
+        ) : filteredArtists.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {filteredArtists.map((artist) => (
               <Card
@@ -143,7 +175,26 @@ const ArtistList = () => {
                   <div className="flex flex-col items-center gap-4">
                     <div className="relative">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/8 to-primary/12 overflow-hidden flex items-center justify-center border border-gray-200/60 shadow-sm">
-                        <User className="w-10 h-10 text-gray-600" />
+                        {artist.profileImageUrl ? (
+                          <img 
+                            src={artist.profileImageUrl} 
+                            alt={artist.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // 이미지 로드 실패 시 img를 숨기고 부모에 아이콘 표시
+                              const img = e.target as HTMLImageElement;
+                              img.style.display = 'none';
+                              if (!img.nextElementSibling) {
+                                const icon = document.createElement('div');
+                                icon.className = 'absolute inset-0 flex items-center justify-center';
+                                icon.innerHTML = '<svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>';
+                                img.parentElement?.appendChild(icon);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <User className="w-10 h-10 text-gray-600" />
+                        )}
                       </div>
                       {artist.isFollowing && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-5.5 h-5.5 rounded-full bg-primary flex items-center justify-center border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
