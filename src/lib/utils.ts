@@ -1,24 +1,41 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, parseISO } from "date-fns";
+import { ko } from "date-fns/locale";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatPerformingSchedule(dates: string[]): string {
-  if (dates.length === 0) return "";
-  if (dates.length === 1) {
-    return format(new Date(dates[0]), "MM.dd (E)");
+  if (!dates || dates.length === 0) return "";
+
+  const dateObjects = dates.map(d => parseISO(d)).sort((a, b) => a.getTime() - b.getTime());
+
+  if (dateObjects.length === 1) {
+    return format(dateObjects[0], "MM.dd (E)", { locale: ko });
   }
-  const firstDate = format(new Date(dates[0]), "MM.dd");
-  const lastDate = format(new Date(dates[dates.length - 1]), "MM.dd (E)");
-  return `${firstDate} - ${lastDate}`;
+
+  let isConsecutive = true;
+  for (let i = 1; i < dateObjects.length; i++) {
+    if (differenceInCalendarDays(dateObjects[i], dateObjects[i - 1]) !== 1) {
+      isConsecutive = false;
+      break;
+    }
+  }
+
+  if (isConsecutive) {
+    const firstDate = format(dateObjects[0], "MM.dd (E)", { locale: ko });
+    const lastDate = format(dateObjects[dateObjects.length - 1], "MM.dd (E)", { locale: ko });
+    return `${firstDate} - ${lastDate}`;
+  } else {
+    return dateObjects.map(d => format(d, "MM.dd (E)", { locale: ko })).join(', ');
+  }
 }
 
 export function formatDateTime(dateString: string): string {
   try {
-    return format(new Date(dateString), "MM.dd (E) HH:mm");
+    return format(parseISO(dateString), "MM.dd (E) HH:mm", { locale: ko });
   } catch {
     return dateString;
   }
@@ -46,6 +63,8 @@ export const getTicketVendor = (url: string): string | null => {
     if (hostname.includes("ticket.yes24.com")) return "YES24 티켓";
     if (hostname.includes("ticket.interpark.com")) return "인터파크 티켓";
     if (hostname.includes("ticket.melon.com")) return "멜론 티켓";
+    if (hostname.includes("ticketlink")) return "티켓링크";
+    if (hostname.includes("stagepick")) return "StagePick";
     return null;
   } catch { 
     return null;
