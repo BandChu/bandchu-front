@@ -83,7 +83,7 @@ const AlbumCreationForm = ({ onSubmit, onClose, loading }: AlbumCreationFormProp
             <Label className="text-right">발매일</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant={"outline"} className={cn("w-[280px] justify-start text-left font-normal", !releaseDate && "text-muted-foreground")}>
+                <Button variant={"outline"} className={cn("col-span-3 justify-start text-left font-normal", !releaseDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {releaseDate ? format(releaseDate, "PPP") : <span>날짜 선택</span>}
                 </Button>
