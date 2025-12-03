@@ -59,8 +59,10 @@ const EventList = ({ events = [] }: EventListProps) => {
                   key={`${event.concertId}-${event.type}-${event.scheduleId}`} 
                   className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => {
-                    if (event.bookingUrl) {
+                    if (isBooking) {
                       window.open(event.bookingUrl, '_blank', 'noopener,noreferrer');
+                    } else {
+                      navigate(`/concert/${event.concertId}`)
                     }
                   }}
                 >
