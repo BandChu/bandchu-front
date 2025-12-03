@@ -243,7 +243,7 @@ const Calendar = ({ onDateSelect, eventDates = [], selectedArtistIds = [], onCle
                         }}
                         title={artistName || ""}
                       >
-                        {artistName}
+                        {/* {artistName} */}
                       </div>
                     );
                   })}
