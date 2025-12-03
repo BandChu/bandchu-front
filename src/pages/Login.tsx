@@ -45,8 +45,10 @@ const Login = () => {
       localStorage.setItem('userEmail', data.email);
       toast.success('로그인 성공');
       navigate("/home");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } catch (error) {
+      if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+      }
     }
   };
 
