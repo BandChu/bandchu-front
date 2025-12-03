@@ -166,7 +166,7 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
         <>
           {hasSubscribedArtists ? (
             <>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide items-end">
+            <div className="flex gap-3 overflow-x-auto py-2 scrollbar-hide items-end">
               <button 
                 className="flex-shrink-0 flex flex-col items-center gap-2.5"
                 onClick={() => navigate("/artists")}
@@ -198,8 +198,8 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
                 // Double click: 상세 페이지 이동
                 navigate(`/artist/${artist.id}`);
               }}
-              className={`flex-shrink-0 flex flex-col items-center gap-2.5 transition-all duration-200 active:scale-[0.98] ${
-                isSelected ? 'scale-105' : 'hover:scale-[1.02]'
+              className={`flex-shrink-0 flex flex-col items-center gap-2.5 transition-all duration-200 active:scale-[0.98] relative ${
+                isSelected ? 'scale-105 z-10' : 'hover:scale-[1.02]'
               }`}
             >
               <div className="relative">
