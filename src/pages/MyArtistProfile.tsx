@@ -20,24 +20,7 @@ import type { Album, AlbumCreationPayload } from "@/types/album";
 import type { Concert, ConcertCreationPayload } from "@/types/concert";
 import EmptyState from '@/components/EmptyState';
 
-// --- 장르 스타일링 헬퍼 함수 ---
-const genreColors: Record<string, string> = {
-  'BALLAD': 'bg-blue-50 text-blue-700 border-blue-200', 'DANCE': 'bg-pink-50 text-pink-700 border-pink-200', 'RAP': 'bg-orange-50 text-orange-700 border-orange-200', 'HIPHOP': 'bg-purple-50 text-purple-700 border-purple-200', 'ROCK': 'bg-red-50 text-red-700 border-red-200', 'METAL': 'bg-gray-800 text-gray-100 border-gray-700', 'POP': 'bg-yellow-50 text-yellow-700 border-yellow-200', 'INDIE': 'bg-green-50 text-green-700 border-green-200', 'JAZZ': 'bg-amber-50 text-amber-700 border-amber-200', 'JPOP': 'bg-rose-50 text-rose-700 border-rose-200',
-  '발라드': 'bg-blue-50 text-blue-700 border-blue-200', '댄스': 'bg-pink-50 text-pink-700 border-pink-200', '랩': 'bg-orange-50 text-orange-700 border-orange-200', '힙합': 'bg-purple-50 text-purple-700 border-purple-200', '록': 'bg-red-50 text-red-700 border-red-200', '메탈': 'bg-gray-800 text-gray-100 border-gray-700', '팝': 'bg-yellow-50 text-yellow-700 border-yellow-200', '인디': 'bg-green-50 text-green-700 border-green-200', '인디 록': 'bg-green-50 text-green-700 border-green-200', '재즈': 'bg-amber-50 text-amber-700 border-amber-200', '제이팝': 'bg-rose-50 text-rose-700 border-rose-200',
-};
-const getGenreColorClass = (genre: string): string => {
-  const upperGenre = genre.toUpperCase();
-  return genreColors[upperGenre] || genreColors[genre] || 'bg-slate-50 text-slate-700 border-slate-200';
-};
-const getGenreColorClassForHeader = (genre: string): string => {
-  const headerColors: Record<string, string> = {
-    'BALLAD': 'bg-blue-500/30 text-blue-100 border-blue-400/40', 'DANCE': 'bg-pink-500/30 text-pink-100 border-pink-400/40', 'RAP': 'bg-orange-500/30 text-orange-100 border-orange-400/40', 'HIPHOP': 'bg-purple-500/30 text-purple-100 border-purple-400/40', 'ROCK': 'bg-red-500/30 text-red-100 border-red-400/40', 'METAL': 'bg-gray-700/50 text-gray-100 border-gray-600/50', 'POP': 'bg-yellow-500/30 text-yellow-100 border-yellow-400/40', 'INDIE': 'bg-green-500/30 text-green-100 border-green-400/40', 'JAZZ': 'bg-amber-500/30 text-amber-100 border-amber-400/40', 'JPOP': 'bg-rose-500/30 text-rose-100 border-rose-400/40',
-    '발라드': 'bg-blue-500/30 text-blue-100 border-blue-400/40', '댄스': 'bg-pink-500/30 text-pink-100 border-pink-400/40', '랩': 'bg-orange-500/30 text-orange-100 border-orange-400/40', '힙합': 'bg-purple-500/30 text-purple-100 border-purple-400/40', '록': 'bg-red-500/30 text-red-100 border-red-400/40', '메탈': 'bg-gray-700/50 text-gray-100 border-gray-600/50', '팝': 'bg-yellow-500/30 text-yellow-100 border-yellow-400/40', '인디': 'bg-green-500/30 text-green-100 border-green-400/40', '인디 록': 'bg-green-500/30 text-green-100 border-green-400/40', '재즈': 'bg-amber-500/30 text-amber-100 border-amber-400/40', '제이팝': 'bg-rose-500/30 text-rose-100 border-rose-400/40',
-  };
-  const upperGenre = genre.toUpperCase();
-  return headerColors[upperGenre] || headerColors[genre] || 'bg-white/20 text-white border-white/30';
-};
-// -------------------------------------------------------------
+import { getGenreColorClass, getGenreColorClassForHeader } from '@/lib/utils';
 
 const MyArtistProfile = () => {
   // Page state

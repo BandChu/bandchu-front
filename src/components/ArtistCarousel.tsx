@@ -1,18 +1,7 @@
 import { Plus, Check, User, ChevronRight, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArtistWithConcerts } from "@/types/subscribedConcerts";
-
-// --- 장르 스타일링 헬퍼 함수 (MyArtistProfile.tsx에서 가져와 일관성 유지) ---
-const genreColors: Record<string, string> = {
-  '인디 록': 'bg-blue-50 text-blue-600 border-blue-200/60', '록': 'bg-red-50 text-red-600 border-red-200/60', '힙합': 'bg-purple-50 text-purple-600 border-purple-200/60', '랩': 'bg-orange-50 text-orange-600 border-orange-200/60',
-  'BALLAD': 'bg-blue-50 text-blue-700 border-blue-200', 'DANCE': 'bg-pink-50 text-pink-700 border-pink-200', 'RAP': 'bg-orange-50 text-orange-700 border-orange-200', 'HIPHOP': 'bg-purple-50 text-purple-700 border-purple-200', 'ROCK': 'bg-red-50 text-red-700 border-red-200', 'METAL': 'bg-gray-800 text-gray-100 border-gray-700', 'POP': 'bg-yellow-50 text-yellow-700 border-yellow-200', 'INDIE': 'bg-green-50 text-green-700 border-green-200', 'JAZZ': 'bg-amber-50 text-amber-700 border-amber-200', 'JPOP': 'bg-rose-50 text-rose-700 border-rose-200',
-};
-const getGenreColorClass = (genre: string): string => {
-  const upperGenre = genre.toUpperCase();
-  return genreColors[upperGenre] || genreColors[genre] || 'bg-muted text-muted-foreground border-border';
-}
-// -------------------------------------------------------------
+import { getGenreColorClass } from "@/lib/utils";
 
 interface ArtistCarouselProps {
   artists: ArtistWithConcerts[];
