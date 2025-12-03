@@ -139,9 +139,13 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
       setArtists(subscribedArtists);
       
       window.dispatchEvent(new CustomEvent('subscriptionChanged'));
-    } catch (error: any) {
-      const errorMessage = error.message || 
-        (artist.isFollowing ? '구독 취소에 실패했습니다.' : '구독하기에 실패했습니다.');
+    } catch (error) {
+      let errorMessage = (artist.isFollowing ? '구독 취소에 실패했습니다.' : '구독하기에 실패했습니다.');
+      
+      if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        errorMessage = error.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       // 로딩 상태 제거
@@ -212,7 +216,7 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
                   <div className={`absolute -bottom-0.5 -right-0.5 w-5.5 h-5.5 rounded-full bg-primary flex items-center justify-center border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-200 ${
                     isSelected ? 'scale-110' : ''
                   }`}>
-                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={2.5} />
+                    {isSelected && <Check className="w-2.5 h-2.5 text-white" strokeWidth={2.5} />}
                   </div>
                 )}
               </div>
