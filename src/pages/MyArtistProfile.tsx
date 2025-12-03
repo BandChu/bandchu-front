@@ -8,19 +8,25 @@ import { Dialog } from '@/components/ui/dialog';
 import { formatPerformingSchedule } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import ArtistProfileForm from '@/components/ArtistProfileForm'; // 범용 폼 import
+import ArtistProfileForm from '@/components/ArtistProfileForm';
+import AddItemHeader from '@/components/AddItemHeader';
+import ConcertCreationForm from '@/components/ConcertCreationForm';
 import { getMyArtistProfile, createArtistProfile, updateArtistProfile } from '@/lib/api/artist';
+import { createConcert } from '@/lib/api/concert';
 
 import type { ArtistCreationPayload, ArtistDetail } from "@/types/artist";
 import type { Album } from "@/types/album";
-import type { Concert } from "@/types/concert";
+import type { Concert, ConcertCreationPayload } from "@/types/concert";
 
 const MyArtistProfile = () => {
   // Page state
   const [profileExists, setProfileExists] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Modal states
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isConcertModalOpen, setIsConcertModalOpen] = useState(false);
 
   // Data state
   const [artist, setArtist] = useState<ArtistDetail | null>(null);
@@ -56,7 +62,7 @@ const MyArtistProfile = () => {
     try {
       await createArtistProfile(data);
       toast.success("프로필이 성공적으로 생성되었습니다!");
-      await loadMyProfile(); // 성공 후 프로필 다시 로드
+      await loadMyProfile();
     } catch (error) {
       toast.error("프로필 생성에 실패했습니다.");
     } finally {
@@ -70,10 +76,24 @@ const MyArtistProfile = () => {
     try {
       await updateArtistProfile(artist.artistId, data);
       toast.success("프로필이 성공적으로 수정되었습니다.");
-      setIsEditDialogOpen(false);
-      await loadMyProfile(); // 성공 후 프로필 다시 로드
+      setIsEditProfileModalOpen(false);
+      await loadMyProfile();
     } catch (error) {
       toast.error("프로필 수정에 실패했습니다.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleConcertCreate = async (data: ConcertCreationPayload) => {
+    setFormLoading(true);
+    try {
+      await createConcert(data);
+      toast.success("공연/행사가 성공적으로 추가되었습니다.");
+      setIsConcertModalOpen(false);
+      await loadMyProfile();
+    } catch (error) {
+      toast.error("공연/행사 추가에 실패했습니다.");
     } finally {
       setFormLoading(false);
     }
@@ -89,18 +109,25 @@ const MyArtistProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* --- 프로필 생성 모달 --- */}
+      {/* --- Modals --- */}
       <Dialog open={!profileExists && !pageLoading}>
         <ArtistProfileForm mode="create" onSubmit={handleProfileCreate} loading={formLoading} />
       </Dialog>
 
-      {/* --- 프로필 수정 모달 --- */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditProfileModalOpen} onOpenChange={setIsEditProfileModalOpen}>
         <ArtistProfileForm 
           mode="edit"
           initialData={artist}
           onSubmit={handleProfileUpdate}
-          onClose={() => setIsEditDialogOpen(false)}
+          onClose={() => setIsEditProfileModalOpen(false)}
+          loading={formLoading}
+        />
+      </Dialog>
+
+      <Dialog open={isConcertModalOpen} onOpenChange={setIsConcertModalOpen}>
+        <ConcertCreationForm
+          onSubmit={handleConcertCreate}
+          onClose={() => setIsConcertModalOpen(false)}
           loading={formLoading}
         />
       </Dialog>
@@ -110,7 +137,7 @@ const MyArtistProfile = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         
         {profileExists && (
-          <Button variant="outline" size="sm" className="absolute top-4 right-4 z-10 bg-white/50 hover:bg-white/80" onClick={() => setIsEditDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="absolute top-4 right-4 z-10 bg-white/50 hover:bg-white/80" onClick={() => setIsEditProfileModalOpen(true)}>
             <Edit className="h-4 w-4 mr-2" />
             프로필 수정
           </Button>
@@ -131,7 +158,7 @@ const MyArtistProfile = () => {
         </TabsList>
 
         <TabsContent value="concerts" className="space-y-4">
-          <div className="mb-4"><h3 className="text-lg font-semibold text-foreground">공연/행사</h3></div>
+          <AddItemHeader title="공연/행사" buttonText="추가" onButtonClick={() => setIsConcertModalOpen(true)} />
           {concerts.length > 0 ? (
             <div className="space-y-4">
               {concerts.map((concert) => (
