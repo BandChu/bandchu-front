@@ -61,26 +61,26 @@ const ArtistDetail = () => {
         }
       } catch (err) {
         // API 실패 시 mock 데이터 사용
-        const mockArtist = getArtistById(id);
-        if (mockArtist) {
-          const mockArtistData = {
-            artistId: mockArtist.id,
-            name: mockArtist.name,
-            profileImageUrl: '',
-            description: `${mockArtist.name}의 음악을 즐겨보세요.`,
-            genre: artistGenres[id] || [],
-            sns: [],
-          };
-          setArtist(mockArtistData);
-          // Mock 데이터를 사용할 때도 앨범과 공연 정보 가져오기
-          fetchAlbums();
-          fetchConcerts();
-        } else {
-          setError("아티스트 정보를 찾을 수 없습니다.");
-          // 아티스트 정보가 없어도 앨범과 공연 정보는 가져오기 시도
-          fetchAlbums();
-          fetchConcerts();
-        }
+        // const mockArtist = getArtistById(id);
+        // if (mockArtist) {
+        //   const mockArtistData = {
+        //     artistId: mockArtist.id,
+        //     name: mockArtist.name,
+        //     profileImageUrl: '',
+        //     description: `${mockArtist.name}의 음악을 즐겨보세요.`,
+        //     genre: artistGenres[id] || [],
+        //     sns: [],
+        //   };
+        //   setArtist(mockArtistData);
+        //   // Mock 데이터를 사용할 때도 앨범과 공연 정보 가져오기
+        //   fetchAlbums();
+        //   fetchConcerts();
+        // } else {
+        //   setError("아티스트 정보를 찾을 수 없습니다.");
+        //   // 아티스트 정보가 없어도 앨범과 공연 정보는 가져오기 시도
+        //   fetchAlbums();
+        //   fetchConcerts();
+        // }
       } finally {
         setLoading(false);
       }
@@ -257,7 +257,7 @@ const ArtistDetail = () => {
                 <div
                   key={concert.concertId}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border/30 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                  onClick={() => toast.info("아직 미구현입니다.")}
+                  onClick={() => navigate(`/concert/${concert.concertId}`)}
                 >
                   <div className="flex gap-4 p-4">
                     {/* 포스터 이미지 */}

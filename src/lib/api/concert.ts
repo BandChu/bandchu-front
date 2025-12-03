@@ -26,3 +26,15 @@ export const getConcertsByArtistId = async (artistId: string): Promise<Concert[]
     throw error;
   }
 };
+
+export const getConcertById = async (concertId: string): Promise<Concert> => {
+  try {
+    const response = await apiClient.get<{ success: boolean; data: Concert; message: string }>(
+      `/api/concerts/${concertId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error(`Failed to fetch concert with id ${concertId}:`, error);
+    throw error;
+  }
+};

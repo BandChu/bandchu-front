@@ -21,8 +21,11 @@ import type { Concert, ConcertCreationPayload } from "@/types/concert";
 import EmptyState from '@/components/EmptyState';
 
 import { getGenreColorClass, getGenreColorClassForHeader } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 const MyArtistProfile = () => {
+  const navigate = useNavigate();
+  
   // Page state
   const [profileExists, setProfileExists] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -188,7 +191,7 @@ const MyArtistProfile = () => {
           {concerts.length > 0 ? (
             <div className="space-y-4">
               {concerts.map((concert) => (
-                <div key={concert.concertId} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border/30 hover:shadow-md transition-all duration-200 cursor-pointer group" onClick={() => toast.info("아직 미구현입니다.")}>
+                <div key={concert.concertId} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border/30 hover:shadow-md transition-all duration-200 cursor-pointer group" onClick={() => navigate(`/concert/${concert.concertId}`)}>
                   <div className="flex gap-4 p-4">
                     <div className="w-24 h-32 flex-shrink-0 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
                       {concert.posterImageUrl ? <img src={concert.posterImageUrl} alt={concert.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10"><Mic className="w-8 h-8 text-primary/30" /></div>}
