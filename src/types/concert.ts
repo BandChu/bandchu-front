@@ -14,3 +14,13 @@ export interface Concert {
   performingSchedule: PerformingSchedule[];
   createdAt: string;
 }
+
+export interface ConcertCreationPayload {
+  title: string;
+  place: string;
+  posterImageUrl?: string;
+  information?: string;
+  bookingSchedule?: string;
+  bookingUrl?: string;
+  performingSchedule: { date: string }[];
+}

@@ -1,14 +1,20 @@
 export interface CalendarEvent {
+  type: 'performance' | 'booking';
   artistId: number;
   artistName: string;
-  artistProfileImageUrl?: string;
-  concertId: number;
-  scheduleId?: number;
+  profileImageUrl?: string;
   date: string;
-  dateTime: string;
   title: string;
-  place: string;
-  type: 'performance' | 'booking';
+  concertId: number;
+  scheduleId: number;
+  
+  // Performance event fields
+  place?: string;
+
+  // Booking event fields
+  vendor?: string;
+  
+  // Common optional fields
   bookingUrl?: string;
-  imageUrl?: string;
+  posterImageUrl?: string;
 }

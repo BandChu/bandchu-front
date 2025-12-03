@@ -17,6 +17,8 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+import { parseJwt } from "@/lib/utils";
+
 const Login = () => {
   const navigate = useNavigate();
   const form = useForm<LoginFormValues>({
@@ -32,12 +34,21 @@ const Login = () => {
       const response = await login(data as LoginRequest);
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
+      
+      // JWT 파싱하여 userRole 저장
+      const decodedToken = parseJwt(response.accessToken);
+      if (decodedToken && decodedToken.role) {
+        localStorage.setItem('userRole', decodedToken.role);
+      }
+
       // 로그인 시 이메일 저장
       localStorage.setItem('userEmail', data.email);
       toast.success('로그인 성공');
       navigate("/home");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } catch (error) {
+      if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+      }
     }
   };
 

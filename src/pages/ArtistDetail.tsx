@@ -3,123 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Link, CalendarDays, Mic, PlayCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/api";
 import type { ArtistDetail } from "@/types/artist";
 import { Album } from "@/types/album";
 import { Concert } from "@/types/concert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPerformingSchedule, formatDateTime } from "@/lib/utils";
-import { getAllArtists, getArtistById } from "@/data/artistSchedules";
+import { getArtistById } from "@/data/artistSchedules";
 import { toast } from "sonner";
+import { getAlbumsByArtistId } from "@/lib/api/album";
+import { getConcertsByArtistId } from "@/lib/api/concert";
+import EmptyState from "@/components/EmptyState";
 
-const artistGenres: Record<number, string[]> = {
-  1: ['인디 록', '록'],
-  2: ['인디 록', '록'],
-  3: ['인디 록', '록'],
-  4: ['인디 록', '록'],
-  5: ['인디 록', '록'],
-  6: ['힙합', '랩'],
-  7: ['힙합', '랩'],
-  8: ['힙합', '랩'],
-  9: ['인디 록', '록'],
-  10: ['인디 록', '록'],
-};
-
-// 장르 enum에 맞춘 색상 정의
-const genreColors: Record<string, string> = {
-  'BALLAD': 'bg-blue-50 text-blue-700 border-blue-200',
-  'DANCE': 'bg-pink-50 text-pink-700 border-pink-200',
-  'RAP': 'bg-orange-50 text-orange-700 border-orange-200',
-  'HIPHOP': 'bg-purple-50 text-purple-700 border-purple-200',
-  'ROCK': 'bg-red-50 text-red-700 border-red-200',
-  'METAL': 'bg-gray-800 text-gray-100 border-gray-700',
-  'POP': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  'INDIE': 'bg-green-50 text-green-700 border-green-200',
-  'JAZZ': 'bg-amber-50 text-amber-700 border-amber-200',
-  'JPOP': 'bg-rose-50 text-rose-700 border-rose-200',
-  // 한국어 장르명도 지원
-  '발라드': 'bg-blue-50 text-blue-700 border-blue-200',
-  '댄스': 'bg-pink-50 text-pink-700 border-pink-200',
-  '랩': 'bg-orange-50 text-orange-700 border-orange-200',
-  '힙합': 'bg-purple-50 text-purple-700 border-purple-200',
-  '록': 'bg-red-50 text-red-700 border-red-200',
-  '메탈': 'bg-gray-800 text-gray-100 border-gray-700',
-  '팝': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  '인디': 'bg-green-50 text-green-700 border-green-200',
-  '인디 록': 'bg-green-50 text-green-700 border-green-200',
-  '재즈': 'bg-amber-50 text-amber-700 border-amber-200',
-  '제이팝': 'bg-rose-50 text-rose-700 border-rose-200',
-};
-
-// 장르 설명 정의
-const genreDescriptions: Record<string, string> = {
-  'BALLAD': '감성적이고 서정적인 발라드 장르로, 따뜻한 멜로디와 진솔한 가사가 특징입니다.',
-  'DANCE': '리듬감 있고 경쾌한 댄스 음악으로, 신나고 활기찬 분위기를 만들어냅니다.',
-  'RAP': '리듬감 있는 랩과 비트가 어우러진 힙합의 한 장르입니다.',
-  'HIPHOP': '힙합 문화에서 나온 음악 장르로, 비트와 랩이 중심이 되는 음악입니다.',
-  'ROCK': '강렬한 기타 사운드와 드럼 비트가 특징인 록 음악입니다.',
-  'METAL': '무겁고 강렬한 사운드가 특징인 메탈 음악으로, 강렬한 에너지를 전달합니다.',
-  'POP': '대중적이고 친숙한 팝 음악으로, 누구나 쉽게 즐길 수 있는 음악입니다.',
-  'INDIE': '독립적인 음악 활동을 하는 인디 아티스트들의 음악으로, 독창적인 사운드가 특징입니다.',
-  'JAZZ': '자유롭고 즉흥적인 재즈 음악으로, 세련되고 우아한 분위기를 만들어냅니다.',
-  'JPOP': '일본의 대중 음악으로, 다양한 스타일과 감성이 어우러진 음악입니다.',
-  // 한국어 장르명도 지원
-  '발라드': '감성적이고 서정적인 발라드 장르로, 따뜻한 멜로디와 진솔한 가사가 특징입니다.',
-  '댄스': '리듬감 있고 경쾌한 댄스 음악으로, 신나고 활기찬 분위기를 만들어냅니다.',
-  '랩': '리듬감 있는 랩과 비트가 어우러진 힙합의 한 장르입니다.',
-  '힙합': '힙합 문화에서 나온 음악 장르로, 비트와 랩이 중심이 되는 음악입니다.',
-  '록': '강렬한 기타 사운드와 드럼 비트가 특징인 록 음악입니다.',
-  '메탈': '무겁고 강렬한 사운드가 특징인 메탈 음악으로, 강렬한 에너지를 전달합니다.',
-  '팝': '대중적이고 친숙한 팝 음악으로, 누구나 쉽게 즐길 수 있는 음악입니다.',
-  '인디': '독립적인 음악 활동을 하는 인디 아티스트들의 음악으로, 독창적인 사운드가 특징입니다.',
-  '인디 록': '인디와 록이 결합된 장르로, 독창적이면서도 강렬한 사운드가 특징입니다.',
-  '재즈': '자유롭고 즉흥적인 재즈 음악으로, 세련되고 우아한 분위기를 만들어냅니다.',
-  '제이팝': '일본의 대중 음악으로, 다양한 스타일과 감성이 어우러진 음악입니다.',
-};
-
-// 장르 색상 클래스 가져오기 (일반 배경용)
-const getGenreColorClass = (genre: string): string => {
-  const upperGenre = genre.toUpperCase();
-  return genreColors[upperGenre] || genreColors[genre] || 'bg-slate-50 text-slate-700 border-slate-200';
-};
-
-// 장르 색상 클래스 가져오기 (어두운 헤더 배경용)
-const getGenreColorClassForHeader = (genre: string): string => {
-  const headerColors: Record<string, string> = {
-    'BALLAD': 'bg-blue-500/30 text-blue-100 border-blue-400/40',
-    'DANCE': 'bg-pink-500/30 text-pink-100 border-pink-400/40',
-    'RAP': 'bg-orange-500/30 text-orange-100 border-orange-400/40',
-    'HIPHOP': 'bg-purple-500/30 text-purple-100 border-purple-400/40',
-    'ROCK': 'bg-red-500/30 text-red-100 border-red-400/40',
-    'METAL': 'bg-gray-700/50 text-gray-100 border-gray-600/50',
-    'POP': 'bg-yellow-500/30 text-yellow-100 border-yellow-400/40',
-    'INDIE': 'bg-green-500/30 text-green-100 border-green-400/40',
-    'JAZZ': 'bg-amber-500/30 text-amber-100 border-amber-400/40',
-    'JPOP': 'bg-rose-500/30 text-rose-100 border-rose-400/40',
-    // 한국어 장르명도 지원
-    '발라드': 'bg-blue-500/30 text-blue-100 border-blue-400/40',
-    '댄스': 'bg-pink-500/30 text-pink-100 border-pink-400/40',
-    '랩': 'bg-orange-500/30 text-orange-100 border-orange-400/40',
-    '힙합': 'bg-purple-500/30 text-purple-100 border-purple-400/40',
-    '록': 'bg-red-500/30 text-red-100 border-red-400/40',
-    '메탈': 'bg-gray-700/50 text-gray-100 border-gray-600/50',
-    '팝': 'bg-yellow-500/30 text-yellow-100 border-yellow-400/40',
-    '인디': 'bg-green-500/30 text-green-100 border-green-400/40',
-    '인디 록': 'bg-green-500/30 text-green-100 border-green-400/40',
-    '재즈': 'bg-amber-500/30 text-amber-100 border-amber-400/40',
-    '제이팝': 'bg-rose-500/30 text-rose-100 border-rose-400/40',
-  };
-  const upperGenre = genre.toUpperCase();
-  return headerColors[upperGenre] || headerColors[genre] || 'bg-white/20 text-white border-white/30';
-};
-
-// 장르 설명 가져오기
-const getGenreDescription = (genre: string): string => {
-  const upperGenre = genre.toUpperCase();
-  return genreDescriptions[upperGenre] || genreDescriptions[genre] || '다양한 음악 스타일을 선보이는 아티스트입니다.';
-};
+import { getGenreColorClass, getGenreColorClassForHeader } from "@/lib/utils";
 
 const ArtistDetail = () => {
   const { artistId } = useParams<{ artistId: string }>();
@@ -165,76 +61,62 @@ const ArtistDetail = () => {
         }
       } catch (err) {
         // API 실패 시 mock 데이터 사용
-        const mockArtist = getArtistById(id);
-        if (mockArtist) {
-          const mockArtistData = {
-            artistId: mockArtist.id,
-            name: mockArtist.name,
-            profileImageUrl: '',
-            description: `${mockArtist.name}의 음악을 즐겨보세요.`,
-            genre: artistGenres[id] || [],
-            sns: [],
-          };
-          setArtist(mockArtistData);
-          // Mock 데이터를 사용할 때도 앨범과 공연 정보 가져오기
-          fetchAlbums();
-          fetchConcerts();
-        } else {
-          setError("아티스트 정보를 찾을 수 없습니다.");
-          // 아티스트 정보가 없어도 앨범과 공연 정보는 가져오기 시도
-          fetchAlbums();
-          fetchConcerts();
-        }
+        // const mockArtist = getArtistById(id);
+        // if (mockArtist) {
+        //   const mockArtistData = {
+        //     artistId: mockArtist.id,
+        //     name: mockArtist.name,
+        //     profileImageUrl: '',
+        //     description: `${mockArtist.name}의 음악을 즐겨보세요.`,
+        //     genre: artistGenres[id] || [],
+        //     sns: [],
+        //   };
+        //   setArtist(mockArtistData);
+        //   // Mock 데이터를 사용할 때도 앨범과 공연 정보 가져오기
+        //   fetchAlbums();
+        //   fetchConcerts();
+        // } else {
+        //   setError("아티스트 정보를 찾을 수 없습니다.");
+        //   // 아티스트 정보가 없어도 앨범과 공연 정보는 가져오기 시도
+        //   fetchAlbums();
+        //   fetchConcerts();
+        // }
       } finally {
         setLoading(false);
       }
     };
 
     const fetchAlbums = async () => {
+      if (!artistId) return;
       setAlbumsLoading(true);
-      setAlbumsError(null);
       try {
-        const response = await apiClient.get<{ success: boolean; data: { albums: Album[] }; message: string }>(
-          `/api/albums?artistId=${artistId}`
-        );
-        if (response.data.success && response.data.data.albums.length > 0) {
-          setAlbums(response.data.data.albums);
-        } else {
-          // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-          const { getAlbumsByArtist } = await import('@/data/artistEvents');
-          const mockAlbums = getAlbumsByArtist(id);
-          setAlbums(mockAlbums);
-        }
+        const albumsData = await getAlbumsByArtistId(artistId);
+        // 발매일 최신순으로 정렬
+        const sortedAlbums = albumsData.sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
+        setAlbums(sortedAlbums || []);
       } catch (err) {
-        // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-        const { getAlbumsByArtist } = await import('@/data/artistEvents');
-        const mockAlbums = getAlbumsByArtist(id);
-        setAlbums(mockAlbums);
+        console.error("앨범 정보를 불러오는 데 실패했습니다.", err);
+        setAlbums([]); // 에러 발생 시 빈 배열로 설정
       } finally {
         setAlbumsLoading(false);
       }
     };
 
     const fetchConcerts = async () => {
+      if (!artistId) return;
       setConcertsLoading(true);
-      setConcertsError(null);
       try {
-        const response = await apiClient.get<{ success: boolean; data: { concerts: Concert[] }; message: string }>(
-          `/api/concerts?artistId=${artistId}`
-        );
-        if (response.data.success && response.data.data.concerts.length > 0) {
-          setConcerts(response.data.data.concerts);
-        } else {
-          // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-          const { getConcertsByArtist } = await import('@/data/artistEvents');
-          const mockConcerts = getConcertsByArtist(id);
-          setConcerts(mockConcerts);
-        }
+        const concertsData = await getConcertsByArtistId(artistId);
+        // 예매일 최신순으로 정렬
+        const sortedConcerts = (concertsData || []).sort((a, b) => {
+          const dateA = a.bookingSchedule && a.bookingSchedule !== 'null' ? new Date(a.bookingSchedule).getTime() : 0;
+          const dateB = b.bookingSchedule && b.bookingSchedule !== 'null' ? new Date(b.bookingSchedule).getTime() : 0;
+          return dateB - dateA;
+        });
+        setConcerts(sortedConcerts);
       } catch (err) {
-        // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-        const { getConcertsByArtist } = await import('@/data/artistEvents');
-        const mockConcerts = getConcertsByArtist(id);
-        setConcerts(mockConcerts);
+        console.error("공연 정보를 불러오는 데 실패했습니다.", err);
+        setConcerts([]); // 에러 발생 시 빈 배열로 설정
       } finally {
         setConcertsLoading(false);
       }
@@ -383,7 +265,7 @@ const ArtistDetail = () => {
                 <div
                   key={concert.concertId}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border/30 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                  onClick={() => toast.info("아직 미구현입니다.")}
+                  onClick={() => navigate(`/concert/${concert.concertId}`)}
                 >
                   <div className="flex gap-4 p-4">
                     {/* 포스터 이미지 */}
@@ -440,9 +322,7 @@ const ArtistDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              공연/행사 정보가 없습니다
-            </div>
+            <EmptyState icon={Mic} message="공연/행사 정보가 없습니다" />
           )}
         </TabsContent>
 
@@ -465,7 +345,7 @@ const ArtistDetail = () => {
                 <div 
                   key={album.albumId} 
                   className="space-y-2 cursor-pointer group"
-                  onClick={() => toast.info("아직 미구현입니다.")}
+                  onClick={() => navigate(`/album/${album.albumId}`)}
                 >
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.03]">
                     {album.coverImageUrl ? (
@@ -488,19 +368,12 @@ const ArtistDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              앨범 정보가 없습니다
-            </div>
+            <EmptyState icon={PlayCircle} message="앨범 정보가 없습니다" />
           )}
         </TabsContent>
         
         <TabsContent value="posts" className="mt-6 px-6 pb-6">
-          <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-muted-foreground text-sm">게시글이 없습니다</p>
-          </div>
+          <EmptyState icon={FileText} message="게시글이 없습니다" />
         </TabsContent>
 
         <TabsContent value="info" className="mt-6 px-6 pb-6 space-y-8">

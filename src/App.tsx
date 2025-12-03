@@ -27,6 +27,8 @@ import ProfileSetup from "./pages/ProfileSetup";
 import EmailVerification from "./pages/EmailVerification";
 import AccountDelete from "./pages/AccountDelete";
 import NotFound from "./pages/NotFound";
+import ConcertDetail from "./pages/ConcertDetail";
+import AlbumDetail from "./pages/AlbumDetail";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +74,10 @@ const AnimatedRoutes = () => {
         <Route path="/signup/profile" element={<ProfileSetup />} />
         <Route path="/signup/verify" element={<EmailVerification />} />
         <Route path="/account/delete" element={<AccountDelete />} />
+        <Route path="/artist/:artistId" element={<ArtistDetail />} />
+        <Route path="/concert/:concertId" element={<ConcertDetail />} />
+        <Route path="/album/:albumId" element={<AlbumDetail />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -1,78 +1,69 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search as SearchIcon } from "lucide-react";
+import { ArrowLeft, Search as SearchIcon, Loader2, User, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import apiClient from "@/lib/api";
-import { ArtistsApiResponse } from "@/types/artist";
-
-interface SearchResult {
-  id: number;
-  type: "artist" | "event";
-  name: string;
-  subtitle?: string;
-}
+import { Separator } from "@/components/ui/separator";
+import { searchByKeyword } from "@/lib/api/search"; // GET /api/artists/search 호출
+import { SearchResponse, ArtistSearchResult, ConcertSearchResult } from "@/types/search";
 
 const Search = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [artists, setArtists] = useState<{ id: number; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const [results, setResults] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadArtists = async () => {
+    // 검색어 디바운싱 로직 (300ms)
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [query]);
+
+  useEffect(() => {
+    // 디바운싱된 검색어로 백엔드 통합 검색 API 호출
+    const performSearch = async () => {
+      if (!debouncedQuery.trim()) {
+        setResults(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        // API를 통해 실제 아티스트 목록 가져오기
-        const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
-        if (response.data.success && response.data.data.artists) {
-          const apiArtists = response.data.data.artists.map(artist => ({
-            id: artist.artistId,
-            name: artist.name,
-          }));
-          setArtists(apiArtists);
-        }
-      } catch (error: any) {
-        console.warn('아티스트 목록 API 호출 실패:', error.message);
-        setArtists([]);
+        // 백엔드 통합 검색 API 호출 (GET /api/artists/search)
+        const searchResults = await searchByKeyword(debouncedQuery);
+        setResults(searchResults);
+      } catch (error) {
+        console.error("Search failed", error);
+        setResults({ artists: [], concerts: [] }); // Clear results on error
       } finally {
         setLoading(false);
       }
     };
 
-    loadArtists();
-  }, []);
+    performSearch();
+  }, [debouncedQuery]);
 
-  // 검색 결과 필터링
-  const getSearchResults = (query: string): SearchResult[] => {
-    if (!query) return [];
-
-    const artistResults: SearchResult[] = artists
-      .filter(artist => artist.name.toLowerCase().includes(query.toLowerCase()))
-      .map(artist => ({
-        id: artist.id,
-        type: "artist" as const,
-        name: artist.name,
-      }));
-
-    // TODO: 공연/행사 검색은 추후 API 연동 시 추가
-    // const eventResults: SearchResult[] = [];
-
-    return artistResults;
+  const handleArtistClick = (artist: ArtistSearchResult) => {
+    navigate(`/artist/${artist.artistId}`);
   };
 
-  const results = getSearchResults(searchQuery);
-
-  const handleResultClick = (result: SearchResult) => {
-    if (result.type === "artist") {
-      navigate(`/artist/${result.id}`);
-    }
+  const handleConcertClick = (concert: ConcertSearchResult) => {
+    navigate(`/concert/${concert.concertId}`); // TODO: 공연 상세 페이지 경로에 맞게 수정
   };
+
+  const hasResults = results && (results.artists.length > 0 || results.concerts.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background border-b border-border px-6 py-4">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
@@ -80,52 +71,89 @@ const Search = () => {
           <div className="flex-1 relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="아티스트"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="아티스트 또는 공연을 검색하세요"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               className="pl-10"
               autoFocus
             />
+            {loading && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+            )}
           </div>
         </div>
       </header>
 
       <main className="px-6 py-4">
-        {loading ? (
+        {!debouncedQuery.trim() ? (
           <div className="text-center py-12 text-muted-foreground">
-            로딩 중...
+            아티스트 또는 공연/행사를 검색해보세요
           </div>
-        ) : searchQuery && results.length > 0 ? (
-          <div className="space-y-2">
-            {results.map((result) => (
-              <Card
-                key={`${result.type}-${result.id}`}
-                className="p-4 cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => handleResultClick(result)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/60 to-primary/90 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground">{result.name}</p>
-                    {result.subtitle && (
-                      <p className="text-sm text-muted-foreground">{result.subtitle}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {result.type === "artist" ? "아티스트" : "공연/행사"}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : searchQuery ? (
+        ) : !loading && !hasResults ? (
           <div className="text-center py-12 text-muted-foreground">
             검색 결과가 없습니다
           </div>
         ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            아티스트 또는 공연/행사를 검색해보세요
-          </div>
+          results && (
+            <div className="space-y-6">
+              {results.artists.length > 0 && (
+                <section>
+                  <h2 className="text-lg font-semibold mb-3">아티스트</h2>
+                  <div className="space-y-2">
+                    {results.artists.map((artist) => (
+                      <Card
+                        key={`artist-${artist.artistId}`}
+                        className="p-4 cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => handleArtistClick(artist)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-muted flex-shrink-0 overflow-hidden">
+                            {artist.profileImageUrl ? (
+                              <img src={artist.profileImageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-full h-full text-muted-foreground/50 p-2" />
+                            )}
+                          </div>
+                          <p className="font-medium text-foreground">{artist.name}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {results.artists.length > 0 && results.concerts.length > 0 && <Separator />}
+
+              {results.concerts.length > 0 && (
+                <section>
+                  <h2 className="text-lg font-semibold mb-3">공연</h2>
+                  <div className="space-y-2">
+                    {results.concerts.map((concert) => (
+                      <Card
+                        key={`concert-${concert.concertId}`}
+                        className="p-4 cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => handleConcertClick(concert)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                            {concert.posterImageUrl ? (
+                              <img src={concert.posterImageUrl} alt={concert.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <Music className="w-full h-full text-muted-foreground/50 p-2" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">{concert.title}</p>
+                            <p className="text-sm text-muted-foreground truncate">{concert.place}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )
         )}
       </main>
     </div>

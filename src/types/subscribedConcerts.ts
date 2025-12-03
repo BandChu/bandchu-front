@@ -3,28 +3,26 @@ export interface PerformingSchedule {
   date: string;
 }
 
-export interface Concert {
+export interface ConcertForSubscribed {
   concertId: number;
   title: string;
   place: string;
+  bookingUrl: string;
+  posterImageUrl?: string;
   performingSchedule: PerformingSchedule[];
   bookingSchedule: string;
-  bookingUrl?: string;
-  imageUrl?: string;
 }
 
-export interface SubscribedArtistWithConcerts {
+export interface ArtistWithConcerts {
   artistId: number;
   name: string;
-  profileImageUrl?: string;
+  profileImageUrl: string;
   subscribedAt: string;
-  concerts: Concert[];
+  description?: string;
+  genre?: string[];
+  concerts: ConcertForSubscribed[];
 }
 
-export interface SubscribedConcertsApiResponse {
-  success: boolean;
-  data: {
-    artists: SubscribedArtistWithConcerts[];
-  };
-  message: string;
+export interface SubscribedConcertsResponse {
+  artists: ArtistWithConcerts[];
 }

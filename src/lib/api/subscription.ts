@@ -1,4 +1,6 @@
 import apiClient from '../api';
+import { SubscribedConcertsResponse } from '@/types/subscribedConcerts';
+
 
 export interface SubscribeRequest {
   artiProfileId: number;
@@ -27,6 +29,14 @@ const getMockSubscriptions = (): number[] => {
 
 const saveMockSubscriptions = (subscriptions: number[]) => {
   localStorage.setItem(MOCK_SUBSCRIPTIONS_KEY, JSON.stringify(subscriptions));
+};
+
+/**
+ * 구독한 아티스트의 공연/일정 전체 조회
+ */ 
+export const getSubscribedConcerts = async (): Promise<SubscribedConcertsResponse> => {
+  const response = await apiClient.get<{ data: SubscribedConcertsResponse }>('/api/concerts/subscribed');
+  return response.data.data;
 };
 
 /**
