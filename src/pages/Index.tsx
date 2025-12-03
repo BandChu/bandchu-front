@@ -8,72 +8,63 @@ import { getAllEventDates } from "@/data/artistSchedules";
 import { getSubscriptions } from "@/lib/api/subscription";
 import { getEventsByDate } from "@/data/artistEvents";
 import { CalendarEvent } from "@/types/calendarEvent";
-import apiClient from "@/lib/api";
-import { ArtistsApiResponse } from "@/types/artist";
+import MyArtistProfile from "./MyArtistProfile";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [loadingRole, setLoadingRole] = useState(true);
+
   const [selectedArtistIds, setSelectedArtistIds] = useState<number[]>([]);
   const [subscribedArtistIds, setSubscribedArtistIds] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [artistNameMap, setArtistNameMap] = useState<Record<number, string>>({});
   
-  // 선택된 아티스트가 없으면 빈 배열 (아무것도 표시 안 함)
+  useEffect(() => {
+    const role = localStorage.getItem('userRole');
+    setUserRole(role);
+    setLoadingRole(false);
+  }, []);
+
   const eventDates = selectedArtistIds.length > 0
-    ? getAllEventDates() // 선택된 아티스트들의 일정은 Calendar에서 필터링
+    ? getAllEventDates()
     : [];
   
-  // 선택된 날짜의 이벤트 가져오기
   const selectedDateEvents: CalendarEvent[] = selectedDate && selectedArtistIds.length > 0
-    ? getEventsByDate(selectedDate, selectedArtistIds, artistNameMap)
+    ? getEventsByDate(selectedDate, selectedArtistIds)
     : [];
 
   useEffect(() => {
-    const loadArtists = async () => {
-      try {
-        // API를 통해 실제 아티스트 목록 가져오기
-        const response = await apiClient.get<ArtistsApiResponse>('/api/artists');
-        if (response.data.success && response.data.data.artists) {
-          const nameMap: Record<number, string> = {};
-          response.data.data.artists.forEach(artist => {
-            nameMap[artist.artistId] = artist.name;
-          });
-          setArtistNameMap(nameMap);
+    // 이 useEffect는 FAN 역할일 때만 실행
+    if (userRole === 'FAN' || userRole === null) {
+      const loadSubscriptions = async () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          setSubscribedArtistIds([]);
+          return;
         }
-      } catch (error: any) {
-        console.warn('아티스트 목록 API 호출 실패:', error.message);
-        // API 실패 시 빈 맵 사용 (하드코딩된 데이터로 폴백)
-      }
-    };
 
-    const loadSubscriptions = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setSubscribedArtistIds([]);
-        return;
-      }
+        try {
+          const subscriptions = await getSubscriptions();
+          const subscribedIds = subscriptions.map(s => s.artiProfileId);
+          setSubscribedArtistIds(subscribedIds);
+        } catch (error) {
+          console.error('구독 목록 로드 실패:', error);
+          setSubscribedArtistIds([]);
+        }
+      };
 
-      try {
-        const subscriptions = await getSubscriptions();
-        const subscribedIds = subscriptions.map(s => s.artiProfileId);
-        setSubscribedArtistIds(subscribedIds);
-      } catch (error) {
-        console.error('구독 목록 로드 실패:', error);
-        setSubscribedArtistIds([]);
-      }
-    };
-
-    loadArtists();
-    loadSubscriptions();
-
-    const handleSubscriptionChange = () => {
       loadSubscriptions();
-    };
 
-    window.addEventListener('subscriptionChanged', handleSubscriptionChange);
-    return () => {
-      window.removeEventListener('subscriptionChanged', handleSubscriptionChange);
-    };
-  }, []);
+      const handleSubscriptionChange = () => {
+        loadSubscriptions();
+      };
+
+      window.addEventListener('subscriptionChanged', handleSubscriptionChange);
+      return () => {
+        window.removeEventListener('subscriptionChanged', handleSubscriptionChange);
+      };
+    }
+  }, [userRole]); // userRole이 변경될 때도 실행되도록 의존성 추가
 
   const handleArtistToggle = (artistId: number) => {
     setSelectedArtistIds((prev) => {
@@ -89,6 +80,21 @@ const Index = () => {
     setSelectedArtistIds([]);
   };
 
+  // 역할 확인 중일 때 로딩 상태 표시
+  if (loadingRole) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // userRole에 따라 다른 컴포넌트 렌더링
+  if (userRole === 'ARTIST') {
+    return <MyArtistProfile />;
+  }
+
+  // 기본값은 FAN 뷰
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />

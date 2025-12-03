@@ -12,6 +12,14 @@ export interface ArtistDetail {
   sns: SnsLink[];
 }
 
+export interface ArtistCreationPayload {
+  name: string;
+  profileImageUrl?: string;
+  description?: string;
+  genre: string[];
+  sns: SnsLink[];
+}
+
 export interface Artist {
   artistId: number;
   name: string;

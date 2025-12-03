@@ -119,7 +119,7 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
       } else {
         throw new Error(response.data.message || '아티스트 목록을 불러오는데 실패했습니다.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.warn('아티스트 목록 API 호출 실패, Mock 데이터로 폴백:', error.message);
       // API 실패 시 Mock 데이터로 폴백
       const allArtistsData = getAllArtists();

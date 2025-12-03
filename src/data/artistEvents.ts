@@ -190,7 +190,6 @@ export const getEventsByDate = (date: Date, artistIds: number[], artistNameMap?:
 export const getConcertsByArtist = (artistId: number): Concert[] => {
   const concerts: Concert[] = [];
   
-  // Fallback 시 하드코딩된 이름 그대로 사용
   Object.entries(mockConcerts).forEach(([day, dayConcerts]) => {
     dayConcerts.forEach((concert, index) => {
       if (concert.artistId === artistId) {
@@ -201,14 +200,14 @@ export const getConcertsByArtist = (artistId: number): Concert[] => {
         const dateStr = date.toISOString().split('T')[0];
         
         concerts.push({
-          concertId: artistId * 1000 + dayNum,
+          concertId: artistId * 1000 + dayNum + index,
           title: concert.title,
           place: concert.place,
           posterImageUrl: '',
-          information: concert.title,
+          information: `${getArtistName(artistId)}의 ${concert.title}`,
           bookingSchedule: concert.bookingUrl ? dateStr : '',
           bookingUrl: concert.bookingUrl || '',
-          performingSchedule: [{ id: 1, date: dateStr }],
+          performingSchedule: [{ id: index + 1, date: dateStr }],
           createdAt: new Date().toISOString(),
         });
       }
