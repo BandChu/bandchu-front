@@ -211,7 +211,7 @@ const MyArtistProfile = () => {
           {albums.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {albums.map((album) => (
-                <div key={album.albumId} className="space-y-2 cursor-pointer group" onClick={() => toast.info("아직 미구현입니다.")}>
+                <div key={album.albumId} className="space-y-2 cursor-pointer group" onClick={() => navigate(`/album/${album.albumId}`)}>
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.03]">
                     {album.coverImageUrl ? <img src={album.coverImageUrl} alt={album.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10"><PlayCircle className="w-12 h-12 text-primary/30" /></div>}
                   </div>

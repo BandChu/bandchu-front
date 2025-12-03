@@ -337,7 +337,7 @@ const ArtistDetail = () => {
                 <div 
                   key={album.albumId} 
                   className="space-y-2 cursor-pointer group"
-                  onClick={() => toast.info("아직 미구현입니다.")}
+                  onClick={() => navigate(`/album/${album.albumId}`)}
                 >
                   <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.03]">
                     {album.coverImageUrl ? (

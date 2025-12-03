@@ -26,3 +26,15 @@ export const getAlbumsByArtistId = async (artistId: string): Promise<Album[]> =>
     throw error;
   }
 };
+
+export const getAlbumById = async (albumId: string): Promise<Album> => {
+  try {
+    const response = await apiClient.get<{ success: boolean; data: Album; message: string }>(
+      `/api/albums/${albumId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error(`Failed to fetch album with id ${albumId}:`, error);
+    throw error;
+  }
+};
