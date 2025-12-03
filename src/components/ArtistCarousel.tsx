@@ -257,9 +257,11 @@ const ArtistCarousel = ({ onArtistToggle, selectedArtistIds = [] }: ArtistCarous
                     ? 'border-primary/40 shadow-[0_2px_8px_rgba(0,0,0,0.08)] bg-gradient-to-br from-primary/12 to-primary/18' 
                     : 'border-gray-200/60 hover:border-primary/30 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
                 }`}>
-                  <User className={`w-8 h-8 transition-colors duration-200 ${
-                    isSelected ? 'text-primary' : 'text-gray-600'
-                  }`} />
+                  {artist.profileImageUrl ? (
+                    <img src={artist.profileImageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className={`w-8 h-8 transition-colors duration-200 ${isSelected ? 'text-primary' : 'text-gray-600'}`} />
+                  )}
                 </div>
                 {artist.isFollowing && (
                   <div className={`absolute -bottom-0.5 -right-0.5 w-5.5 h-5.5 rounded-full bg-primary flex items-center justify-center border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-200 ${
