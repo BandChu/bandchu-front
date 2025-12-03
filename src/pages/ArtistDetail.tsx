@@ -3,16 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Link, CalendarDays, Mic, PlayCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/api";
 import type { ArtistDetail } from "@/types/artist";
 import { Album } from "@/types/album";
 import { Concert } from "@/types/concert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPerformingSchedule, formatDateTime } from "@/lib/utils";
-import { getAllArtists, getArtistById } from "@/data/artistSchedules";
+import { getArtistById } from "@/data/artistSchedules";
 import { toast } from "sonner";
+import { getAlbumsByArtistId } from "@/lib/api/album";
+import { getConcertsByArtistId } from "@/lib/api/concert";
+import EmptyState from "@/components/EmptyState";
 
 const artistGenres: Record<number, string[]> = {
   1: ['인디 록', '록'],
@@ -191,50 +192,28 @@ const ArtistDetail = () => {
     };
 
     const fetchAlbums = async () => {
+      if (!artistId) return;
       setAlbumsLoading(true);
-      setAlbumsError(null);
       try {
-        const response = await apiClient.get<{ success: boolean; data: { albums: Album[] }; message: string }>(
-          `/api/albums?artistId=${artistId}`
-        );
-        if (response.data.success && response.data.data.albums.length > 0) {
-          setAlbums(response.data.data.albums);
-        } else {
-          // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-          const { getAlbumsByArtist } = await import('@/data/artistEvents');
-          const mockAlbums = getAlbumsByArtist(id);
-          setAlbums(mockAlbums);
-        }
+        const albumsData = await getAlbumsByArtistId(artistId);
+        setAlbums(albumsData || []);
       } catch (err) {
-        // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-        const { getAlbumsByArtist } = await import('@/data/artistEvents');
-        const mockAlbums = getAlbumsByArtist(id);
-        setAlbums(mockAlbums);
+        console.error("앨범 정보를 불러오는 데 실패했습니다.", err);
+        setAlbums([]); // 에러 발생 시 빈 배열로 설정
       } finally {
         setAlbumsLoading(false);
       }
     };
 
     const fetchConcerts = async () => {
+      if (!artistId) return;
       setConcertsLoading(true);
-      setConcertsError(null);
       try {
-        const response = await apiClient.get<{ success: boolean; data: { concerts: Concert[] }; message: string }>(
-          `/api/concerts?artistId=${artistId}`
-        );
-        if (response.data.success && response.data.data.concerts.length > 0) {
-          setConcerts(response.data.data.concerts);
-        } else {
-          // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-          const { getConcertsByArtist } = await import('@/data/artistEvents');
-          const mockConcerts = getConcertsByArtist(id);
-          setConcerts(mockConcerts);
-        }
+        const concertsData = await getConcertsByArtistId(artistId);
+        setConcerts(concertsData || []);
       } catch (err) {
-        // API 실패 시 mock 데이터 사용 (하드코딩된 이름 그대로 사용)
-        const { getConcertsByArtist } = await import('@/data/artistEvents');
-        const mockConcerts = getConcertsByArtist(id);
-        setConcerts(mockConcerts);
+        console.error("공연 정보를 불러오는 데 실패했습니다.", err);
+        setConcerts([]); // 에러 발생 시 빈 배열로 설정
       } finally {
         setConcertsLoading(false);
       }
@@ -440,9 +419,7 @@ const ArtistDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              공연/행사 정보가 없습니다
-            </div>
+            <EmptyState icon={Mic} message="공연/행사 정보가 없습니다" />
           )}
         </TabsContent>
 
@@ -488,19 +465,12 @@ const ArtistDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              앨범 정보가 없습니다
-            </div>
+            <EmptyState icon={PlayCircle} message="앨범 정보가 없습니다" />
           )}
         </TabsContent>
         
         <TabsContent value="posts" className="mt-6 px-6 pb-6">
-          <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-muted-foreground text-sm">게시글이 없습니다</p>
-          </div>
+          <EmptyState icon={FileText} message="게시글이 없습니다" />
         </TabsContent>
 
         <TabsContent value="info" className="mt-6 px-6 pb-6 space-y-8">

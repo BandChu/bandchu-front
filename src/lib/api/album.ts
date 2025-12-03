@@ -13,3 +13,16 @@ export const createAlbum = async (payload: AlbumCreationPayload): Promise<Album>
     throw error;
   }
 };
+
+export const getAlbumsByArtistId = async (artistId: string): Promise<Album[]> => {
+  try {
+    const response = await apiClient.get<{ success: boolean; data: { albums: Album[] }; message: string }>(
+      `/api/albums`,
+      { params: { artistId } }
+    );
+    return response.data.data.albums;
+  } catch (error) {
+    console.error("Failed to fetch albums by artist:", error);
+    throw error;
+  }
+};
