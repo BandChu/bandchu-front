@@ -9,8 +9,8 @@ interface CalendarProps {
   events?: CalendarEvent[];
   subscribedArtists?: ArtistWithConcerts[];
   selectedArtistIds?: number[];
-  selectedDate: Date | null; // 부모로부터 선택된 날짜를 받음
-  onDateSelect: (date: Date) => void; // 날짜 선택 이벤트를 부모에게 알림
+  selectedDate: Date | null;
+  onDateSelect: (date: Date) => void;
   onClearSelection?: () => void;
 }
 
@@ -26,6 +26,7 @@ const Calendar = ({
 
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
+  // 아티스트 이름을 빠르게 찾기 위한 Map
   const artistNameMap = useMemo(() => {
     const map = new Map<number, string>();
     subscribedArtists.forEach(artist => {
@@ -34,17 +35,24 @@ const Calendar = ({
     return map;
   }, [subscribedArtists]);
 
-  const eventDateSet = useMemo(() => {
-    const dateSet = new Set<string>();
+  // 날짜별로 이벤트가 있는 아티스트 ID 목록을 그룹화
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, number[]>();
     events.forEach(event => {
       try {
         const dateKey = format(new Date(event.date), "yyyy-MM-dd");
-        dateSet.add(dateKey);
+        if (!map.has(dateKey)) {
+          map.set(dateKey, []);
+        }
+        const artistsOnDay = map.get(dateKey)!;
+        if (!artistsOnDay.includes(event.artistId)) {
+          artistsOnDay.push(event.artistId);
+        }
       } catch (e) {
-        console.warn("Invalid date found in event for calendar:", event);
+        console.warn("Invalid date in event for calendar:", event);
       }
     });
-    return dateSet;
+    return map;
   }, [events]);
 
   const goToPrevMonth = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -65,31 +73,43 @@ const Calendar = ({
         const dayClone = new Date(day);
         const dateKey = format(dayClone, "yyyy-MM-dd");
         const dayOfMonth = format(dayClone, "d");
+        
         const isCurrentMonth = isSameMonth(dayClone, currentMonth);
         const isSelected = selectedDate ? isSameDay(dayClone, selectedDate) : false;
         const isToday = isTodayDateFns(dayClone);
-        const hasEvent = eventDateSet.has(dateKey);
+        const isWeekend = dayClone.getDay() === 0 || dayClone.getDay() === 6;
+
+        const artistsOnDate = eventsByDate.get(dateKey) || [];
+        const hasEvent = artistsOnDate.length > 0;
 
         days.push(
           <button
             key={dayClone.toString()}
             onClick={() => onDateSelect(dayClone)}
-            className={`aspect-square rounded-lg flex flex-col items-center justify-center p-1 text-sm font-medium transition-all duration-150 relative group ${!isCurrentMonth ? "text-gray-300/80" : "text-gray-700"} ${isSelected ? "bg-primary/10" : "hover:bg-gray-100/60"}`}
+            className={`aspect-square rounded-lg flex flex-col items-start p-1.5 text-sm font-medium transition-all duration-150 relative group ${!isCurrentMonth ? "text-gray-300 opacity-50" : ""} ${isWeekend && isCurrentMonth ? "text-gray-500" : isCurrentMonth ? "text-gray-700" : ""} ${isToday ? "bg-primary/10 border border-primary/30" : ""} ${isSelected && !isToday ? "bg-primary/5 border border-primary/20" : ""} ${!hasEvent && isCurrentMonth && !isToday && !isSelected ? "hover:bg-gray-100/60" : ""} ${hasEvent && !isToday ? "hover:bg-gray-100/50" : ""}`}
           >
-            <span className={`flex items-center justify-center w-8 h-8 rounded-full ${isSelected ? "bg-primary text-primary-foreground" : isToday ? "bg-accent text-accent-foreground" : ""}`}>
-              {dayOfMonth}
-            </span>
-            {hasEvent && !isSelected && (
-              <div className="absolute bottom-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
+            <div className="flex items-center justify-center w-full mb-0.5">
+              <span className={`text-sm ${isToday ? "font-bold text-primary" : isSelected ? "font-semibold text-gray-900" : isCurrentMonth ? "font-semibold text-gray-800" : "font-medium text-gray-400"}`}>
+                {dayOfMonth}
+              </span>
+            </div>
+            {hasEvent && (
+              <div className="w-full space-y-0.5 mt-0.5 flex-1 overflow-hidden">
+                {/* 색상 로직 제거: 모든 점을 단일 색상으로 표시 */}
+                {artistsOnDate.slice(0, 2).map((artistId) => (
+                  <div key={artistId} className="h-1.5 w-full rounded-full bg-primary/70" title={artistNameMap.get(artistId) || ""}></div>
+                ))}
+                {artistsOnDate.length > 2 && <div className="text-[10px] text-center text-primary/80 font-semibold">+{artistsOnDate.length - 2}</div>}
+              </div>
             )}
           </button>
         );
         day = addDays(day, 1);
       }
-      rows.push(<div key={day.toString()} className="grid grid-cols-7 gap-1">{days}</div>);
+      rows.push(<div key={day.toString()} className="grid grid-cols-7 gap-0.5 bg-gray-50/50 p-1 rounded-2xl">{days}</div>);
       days = [];
     }
-    return <div className="space-y-1">{rows}</div>;
+    return <div>{rows}</div>;
   };
 
   if (subscribedArtists.length === 0) {
