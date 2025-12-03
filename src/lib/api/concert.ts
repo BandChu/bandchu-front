@@ -38,3 +38,25 @@ export const getConcertById = async (concertId: string): Promise<Concert> => {
     throw error;
   }
 };
+
+export const updateConcert = async (concertId: string, payload: ConcertCreationPayload): Promise<Concert> => {
+  try {
+    const response = await apiClient.patch<{ success: boolean; data: Concert; message: string }>(
+      `/api/concerts/${concertId}`,
+      payload
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error(`Failed to update concert with id ${concertId}:`, error);
+    throw error;
+  }
+};
+
+export const deleteConcert = async (concertId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/api/concerts/${concertId}`);
+  } catch (error) {
+    console.error(`Failed to delete concert with id ${concertId}:`, error);
+    throw error;
+  }
+};

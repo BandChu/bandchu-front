@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 import ArtistProfileForm from '@/components/ArtistProfileForm';
 import AddItemHeader from '@/components/AddItemHeader';
-import ConcertCreationForm from '@/components/ConcertCreationForm';
+import ConcertForm from '@/components/ConcertForm';
 import AlbumCreationForm from '@/components/AlbumCreationForm';
 import { getMyArtistProfile, createArtistProfile, updateArtistProfile } from '@/lib/api/artist';
 import { createConcert } from '@/lib/api/concert';
@@ -139,7 +139,12 @@ const MyArtistProfile = () => {
         <ArtistProfileForm mode="edit" initialData={artist} onSubmit={handleProfileUpdate} onClose={() => setIsEditProfileModalOpen(false)} loading={formLoading} />
       </Dialog>
       <Dialog open={isConcertModalOpen} onOpenChange={setIsConcertModalOpen}>
-        <ConcertCreationForm onSubmit={handleConcertCreate} onClose={() => setIsConcertModalOpen(false)} loading={formLoading} />
+        <ConcertForm
+          mode="create"
+          onSubmit={handleConcertCreate}
+          onClose={() => setIsConcertModalOpen(false)}
+          loading={formLoading}
+        />
       </Dialog>
       <Dialog open={isAlbumModalOpen} onOpenChange={setIsAlbumModalOpen}>
         <AlbumCreationForm onSubmit={handleAlbumCreate} onClose={() => setIsAlbumModalOpen(false)} loading={formLoading} />

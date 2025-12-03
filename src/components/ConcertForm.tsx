@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { format } from "date-fns";
+import { useState, useEffect } from 'react';
+import { format, parseISO } from "date-fns";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,20 +10,21 @@ import { Calendar as CalendarIcon, Plus, X } from 'lucide-react';
 import {
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
   DialogContent,
 } from '@/components/ui/dialog';
-import { ConcertCreationPayload } from '@/types/concert';
+import { Concert, ConcertCreationPayload } from '@/types/concert';
 import { cn } from "@/lib/utils";
 
-interface ConcertCreationFormProps {
+interface ConcertFormProps {
+  mode: 'create' | 'edit';
+  initialData?: Concert | null;
   onSubmit: (data: ConcertCreationPayload) => void;
   onClose: () => void;
   loading: boolean;
 }
 
-const ConcertCreationForm = ({ onSubmit, onClose, loading }: ConcertCreationFormProps) => {
+const ConcertForm = ({ mode, initialData, onSubmit, onClose, loading }: ConcertFormProps) => {
   const [title, setTitle] = useState('');
   const [place, setPlace] = useState('');
   const [posterImageUrl, setPosterImageUrl] = useState('');
@@ -31,6 +32,24 @@ const ConcertCreationForm = ({ onSubmit, onClose, loading }: ConcertCreationForm
   const [bookingUrl, setBookingUrl] = useState('');
   const [bookingSchedule, setBookingSchedule] = useState<Date | undefined>();
   const [performingDates, setPerformingDates] = useState<(Date | undefined)[]>([undefined]);
+
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      setTitle(initialData.title || '');
+      setPlace(initialData.place || '');
+      setPosterImageUrl(initialData.posterImageUrl || '');
+      setInformation(initialData.information || '');
+      setBookingUrl(initialData.bookingUrl || '');
+      if (initialData.bookingSchedule && initialData.bookingSchedule !== 'null') {
+        setBookingSchedule(parseISO(initialData.bookingSchedule));
+      }
+      if (initialData.performingSchedule && initialData.performingSchedule.length > 0) {
+        setPerformingDates(initialData.performingSchedule.map(s => parseISO(s.date)));
+      } else {
+        setPerformingDates([undefined]);
+      }
+    }
+  }, [mode, initialData]);
 
   const handleDateChange = (index: number, date: Date | undefined) => {
     const newDates = [...performingDates];
@@ -40,6 +59,7 @@ const ConcertCreationForm = ({ onSubmit, onClose, loading }: ConcertCreationForm
 
   const addDateField = () => setPerformingDates([...performingDates, undefined]);
   const removeDateField = (index: number) => {
+    if (performingDates.length <= 1) return; // 최소 1개의 날짜 필드는 유지
     const newDates = performingDates.filter((_, i) => i !== index);
     setPerformingDates(newDates);
   };
@@ -59,31 +79,21 @@ const ConcertCreationForm = ({ onSubmit, onClose, loading }: ConcertCreationForm
     };
     onSubmit(payload);
   };
+  
+  const isCreateMode = mode === 'create';
 
   return (
     <DialogContent className="sm:max-w-2xl">
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <DialogTitle>새 공연/행사 추가</DialogTitle>
+          <DialogTitle>{isCreateMode ? '새 공연/행사 추가' : '공연/행사 수정'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-6 max-h-[60vh] overflow-y-auto pr-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">공연명</Label>
             <div className="col-span-3">
-              <Input 
-                id="title" 
-                value={title} 
-                onChange={(e) => {
-                  if (e.target.value.length <= 30) {
-                    setTitle(e.target.value);
-                  }
-                }} 
-                maxLength={30}
-                required 
-              />
-              <p className="text-xs text-right text-muted-foreground mt-1.5 pr-1">
-                {title.length} / 30
-              </p>
+              <Input id="title" value={title} onChange={(e) => { if (e.target.value.length <= 30) setTitle(e.target.value); }} maxLength={30} required />
+              <p className="text-xs text-right text-muted-foreground mt-1.5 pr-1">{title.length} / 30</p>
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -137,11 +147,11 @@ const ConcertCreationForm = ({ onSubmit, onClose, loading }: ConcertCreationForm
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>취소</Button>
-          <Button type="submit" disabled={!title || !place || loading}>{loading ? '추가 중...' : '추가하기'}</Button>
+          <Button type="submit" disabled={!title || !place || loading}>{loading ? (isCreateMode ? '추가 중...' : '저장 중...') : (isCreateMode ? '추가하기' : '저장하기')}</Button>
         </DialogFooter>
       </form>
     </DialogContent>
   );
 };
 
-export default ConcertCreationForm;
+export default ConcertForm;
