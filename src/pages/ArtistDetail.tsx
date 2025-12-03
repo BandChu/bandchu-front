@@ -107,7 +107,13 @@ const ArtistDetail = () => {
       setConcertsLoading(true);
       try {
         const concertsData = await getConcertsByArtistId(artistId);
-        setConcerts(concertsData || []);
+        // 예매일 최신순으로 정렬
+        const sortedConcerts = (concertsData || []).sort((a, b) => {
+          const dateA = a.bookingSchedule && a.bookingSchedule !== 'null' ? new Date(a.bookingSchedule).getTime() : 0;
+          const dateB = b.bookingSchedule && b.bookingSchedule !== 'null' ? new Date(b.bookingSchedule).getTime() : 0;
+          return dateB - dateA;
+        });
+        setConcerts(sortedConcerts);
       } catch (err) {
         console.error("공연 정보를 불러오는 데 실패했습니다.", err);
         setConcerts([]); // 에러 발생 시 빈 배열로 설정

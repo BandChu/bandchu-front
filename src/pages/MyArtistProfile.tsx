@@ -47,10 +47,16 @@ const MyArtistProfile = () => {
       const response = await getMyArtistProfile();
       if (response.isExists) {
         setArtist(response.artist || null);
-        // 발매일 최신순으로 정렬
+        // 앨범: 발매일 최신순으로 정렬
         const sortedAlbums = (response.albums || []).sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
         setAlbums(sortedAlbums);
-        setConcerts(response.concerts || []);
+        // 공연: 예매일 최신순으로 정렬
+        const sortedConcerts = (response.concerts || []).sort((a, b) => {
+          const dateA = a.bookingSchedule && a.bookingSchedule !== 'null' ? new Date(a.bookingSchedule).getTime() : 0;
+          const dateB = b.bookingSchedule && b.bookingSchedule !== 'null' ? new Date(b.bookingSchedule).getTime() : 0;
+          return dateB - dateA;
+        });
+        setConcerts(sortedConcerts);
         setProfileExists(true);
       } else {
         setProfileExists(false);
