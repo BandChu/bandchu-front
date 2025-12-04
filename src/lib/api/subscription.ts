@@ -35,8 +35,29 @@ const saveMockSubscriptions = (subscriptions: number[]) => {
  * 구독한 아티스트의 공연/일정 전체 조회
  */ 
 export const getSubscribedConcerts = async (): Promise<SubscribedConcertsResponse> => {
-  const response = await apiClient.get<{ data: SubscribedConcertsResponse }>('/api/concerts/subscribed');
-  return response.data.data;
+  try {
+    const response = await apiClient.get<any>('/api/concerts/subscribed');
+    
+    // 응답 구조가 다를 수 있으므로 여러 경우를 처리
+    if (response.data?.data?.artists) {
+      // { data: { artists: [...] } } 구조
+      return response.data.data as SubscribedConcertsResponse;
+    } else if (response.data?.artists) {
+      // { artists: [...] } 구조 (직접)
+      return response.data as SubscribedConcertsResponse;
+    } else if (response.data?.data) {
+      // 다른 구조일 수 있음
+      const data = response.data.data;
+      if (data.artists) {
+        return data as SubscribedConcertsResponse;
+      }
+    }
+    
+    throw new Error('응답 구조가 예상과 다릅니다.');
+  } catch (error: any) {
+    console.error("getSubscribedConcerts 에러:", error);
+    throw error;
+  }
 };
 
 /**

@@ -63,6 +63,23 @@ const SignupForm = () => {
         return;
       }
       
+      // 500 에러 처리 (서버 내부 오류)
+      if (error.response?.status === 500) {
+        console.error('서버 에러 상세:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.response?.data?.message,
+          error: error.response?.data?.error,
+        });
+        
+        const serverMessage = 
+          error.response?.data?.message || 
+          error.response?.data?.error || 
+          '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        toast.error(serverMessage);
+        return;
+      }
+      
       // 409 에러 처리 (이메일/닉네임 중복 등)
       if (error.response?.status === 409) {
         const conflictMessage = error.response?.data?.message || '이미 사용 중인 이메일 또는 닉네임입니다.';
@@ -71,6 +88,7 @@ const SignupForm = () => {
       }
       
       // 서버 응답 구조에 따라 에러 메시지 추출
+      console.error('회원가입 에러:', error);
       const errorMessage = 
         error.response?.data?.message || 
         error.response?.data?.error || 

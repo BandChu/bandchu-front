@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, Plus } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
+import { ArrowLeft, Send, Plus, MessageCircle, User, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -9,6 +9,8 @@ import { getMessages, sendMessage as sendMessageApi, updateReadStatus } from "@/
 import { ChatMessage, MessageType } from "@/types/chat";
 import { getWebSocketClient } from "@/lib/websocket";
 import { jwtDecode } from "jwt-decode";
+import BottomNav from "@/components/BottomNav";
+import EmptyState from "@/components/EmptyState";
 
 interface JwtPayload {
   sub: string;
@@ -38,7 +40,6 @@ const ChatRoom = () => {
       const decoded = jwtDecode<JwtPayload>(token);
       return parseInt(decoded.sub);
     } catch (error) {
-      console.error('Failed to decode JWT:', error);
       toast.error('인증 오류가 발생했습니다.');
       navigate('/login');
       return 0;
@@ -59,15 +60,13 @@ const ChatRoom = () => {
       // 읽음 처리: 메시지가 있으면 마지막 메시지를 읽음으로 표시
       if (response.messages.length > 0) {
         const lastMessage = response.messages[response.messages.length - 1];
-        console.log('📖 Marking as read up to message:', lastMessage.messageId);
 
         try {
           await updateReadStatus(parseInt(roomId), {
             lastReadMessageId: lastMessage.messageId
           });
-          console.log('✅ Read status updated successfully');
         } catch (error) {
-          console.error('❌ Failed to update read status:', error);
+          // 읽음 처리 실패는 조용히 처리
         }
       }
     } catch (error) {
@@ -85,23 +84,23 @@ const ChatRoom = () => {
     loadMessages();
 
     const client = wsClient.current;
+    const roomIdNum = parseInt(roomId || '0');
 
     client.connect().then(() => {
-      client.subscribe(roomId, (newMessage: ChatMessage) => {
-        console.log('📨 Received message:', newMessage);
+      client.subscribe(roomIdNum, (newMessage: ChatMessage) => {
         setMessages(prev => [...prev, newMessage]);
         scrollToBottom();
 
         // 새 메시지 수신 시 자동 읽음 처리
-        console.log('📖 Auto-marking new message as read:', newMessage.messageId);
-        updateReadStatus(parseInt(roomId), { lastReadMessageId: newMessage.messageId })
-          .then(() => console.log('✅ New message marked as read'))
-          .catch(err => console.error('❌ Failed to mark new message as read:', err));
+        updateReadStatus(roomIdNum, { lastReadMessageId: newMessage.messageId })
+          .catch(() => {
+            // 읽음 처리 실패는 조용히 처리
+          });
       });
     });
 
     return () => {
-      client.unsubscribe(roomId);
+      client.unsubscribe(roomIdNum);
     };
   }, [roomId]);
 
@@ -162,29 +161,39 @@ const ChatRoom = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <header className="sticky top-0 bg-background border-b border-border z-10">
-        <div className="max-w-screen-xl mx-auto px-4 h-16 flex items-center gap-4">
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-4 max-w-screen-xl mx-auto">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors -ml-2"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-3 flex-1">
-            <Avatar className="w-10 h-10" />
-            <div>
-              <h1 className="font-semibold">채팅방 {roomId}</h1>
-              <p className="text-sm text-muted-foreground">온라인</p>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-gray-100">
+              <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
+                <User className="w-5 h-5 text-gray-500" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-semibold text-gray-900 truncate">채팅방 {roomId}</h1>
+              <p className="text-xs text-gray-500">온라인</p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 pb-32">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">메시지가 없습니다.</p>
+          <div className="flex items-center justify-center h-full min-h-[60vh]">
+            <EmptyState 
+              icon={MessageCircle}
+              message="아직 메시지가 없습니다"
+              description="첫 메시지를 보내 대화를 시작해보세요"
+            />
           </div>
         ) : (
           messages.map((msg) => {
@@ -193,19 +202,26 @@ const ChatRoom = () => {
             return (
               <div
                 key={msg.messageId}
-                className={`flex gap-3 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
+                className={`flex gap-2.5 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
               >
-                {!isMine && <Avatar className="w-8 h-8 flex-shrink-0" />}
+                {!isMine && (
+                  <Avatar className="w-8 h-8 flex-shrink-0 ring-1 ring-gray-100">
+                    <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
+                      <User className="w-4 h-4 text-gray-500" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
 
-                <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                <div className={`flex flex-col gap-1 ${isMine ? 'items-end' : 'items-start'} max-w-[75%]`}>
                   <div
-                    className={`rounded-2xl px-4 py-2 ${isMine
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                      }`}
+                    className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                      isMine
+                        ? 'bg-purple-500 text-white rounded-br-sm'
+                        : 'bg-white text-gray-900 rounded-bl-sm border border-gray-100'
+                    }`}
                   >
                     {msg.messageType === MessageType.TEXT && (
-                      <p className="text-sm whitespace-pre-wrap break-words">
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                         {msg.content}
                       </p>
                     )}
@@ -213,11 +229,11 @@ const ChatRoom = () => {
                       <img
                         src={msg.fileUrl}
                         alt="Uploaded"
-                        className="max-w-full rounded"
+                        className="max-w-full rounded-lg"
                       />
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground mt-1">
+                  <span className="text-[11px] text-gray-400 px-1">
                     {formatTime(msg.createdAt)}
                   </span>
                 </div>
@@ -228,9 +244,10 @@ const ChatRoom = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="sticky bottom-0 bg-background border-t border-border p-4">
+      {/* Input Area */}
+      <div className="fixed bottom-[72px] left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 py-3 z-40">
         <div className="max-w-screen-xl mx-auto flex items-center gap-2">
-          <button className="p-2 hover:bg-accent rounded-full transition-colors">
+          <button className="p-2.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700">
             <Plus className="w-5 h-5" />
           </button>
           <Input
@@ -238,19 +255,20 @@ const ChatRoom = () => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="메시지를 입력하세요..."
-            className="flex-1"
+            className="flex-1 bg-gray-50 border-gray-200 focus-visible:ring-purple-500 focus-visible:ring-2 rounded-full px-4 h-11"
             disabled={sending}
           />
           <Button
             onClick={handleSend}
             disabled={!message.trim() || sending}
             size="icon"
-            className="shrink-0"
+            className="shrink-0 w-11 h-11 rounded-full bg-purple-500 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />
           </Button>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 };

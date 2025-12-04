@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { isSameDay } from "date-fns";
 import Header from "@/components/Header";
 import ArtistCarousel from "@/components/ArtistCarousel";
@@ -48,6 +49,7 @@ const transformDataToCalendarEvents = (data: SubscribedConcertsResponse): Calend
 };
 
 const FanHome = () => {
+  const location = useLocation();
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [subscribedArtists, setSubscribedArtists] = useState<ArtistWithConcerts[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,7 @@ const FanHome = () => {
       setLoading(true);
       try {
         const response = await getSubscribedConcerts();
+        
         if (response && response.artists) {
           const transformedEvents = transformDataToCalendarEvents(response);
           setAllEvents(transformedEvents);
@@ -75,8 +78,52 @@ const FanHome = () => {
         setLoading(false);
       }
     };
+    
+    // 초기 로드
     loadSubscribedData();
+    
+    // 페이지 포커스 시 데이터 다시 로드 (구독/취소 후 홈으로 돌아왔을 때 업데이트)
+    const handleFocus = () => {
+      loadSubscribedData();
+    };
+    
+    // 페이지 가시성 변경 시 데이터 다시 로드 (탭 전환 등)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadSubscribedData();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
+
+  // 홈 페이지로 돌아올 때마다 데이터 다시 로드
+  useEffect(() => {
+    if (location.pathname === '/') {
+      const loadSubscribedData = async () => {
+        try {
+          const response = await getSubscribedConcerts();
+          if (response && response.artists) {
+            const transformedEvents = transformDataToCalendarEvents(response);
+            setAllEvents(transformedEvents);
+            setSubscribedArtists(response.artists);
+          } else {
+            setAllEvents([]);
+            setSubscribedArtists([]);
+          }
+        } catch (error) {
+          console.error("Failed to load subscribed data:", error);
+        }
+      };
+      loadSubscribedData();
+    }
+  }, [location.pathname]);
 
   const filteredEvents = selectedArtistIds.length > 0
     ? allEvents.filter(event => selectedArtistIds.includes(event.artistId))

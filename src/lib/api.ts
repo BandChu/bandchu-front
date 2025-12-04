@@ -1,9 +1,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const getBaseURL = () => {
+  // 개발 환경에서는 프록시 사용 (CORS 문제 해결)
   if (import.meta.env.DEV) {
     return '';
   }
+  // 프로덕션 환경에서는 배포 서버 사용
   return import.meta.env.VITE_API_BASE_URL || 'https://bandchu.o-r.kr';
 };
 

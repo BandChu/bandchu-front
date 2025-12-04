@@ -75,3 +75,28 @@ export const updateReadStatus = async (
     );
     return response.data.data;
 };
+
+/**
+ * 채팅방 숨기기
+ * PUT /api/chatrooms/{roomId}/hide 또는 PATCH /api/chatrooms/{roomId}/hide
+ */
+export const hideChatRoom = async (roomId: number): Promise<void> => {
+    try {
+        // 숨기기 API 호출 (엔드포인트는 백엔드에 맞게 수정 필요)
+        const response = await apiClient.put(`/api/chatrooms/${roomId}/hide`);
+        
+        // 응답이 없거나 성공인 경우
+        if (response.status === 200 || response.status === 204) {
+            return;
+        }
+        
+        // 응답 구조 확인
+        if (response.data && response.data.success === false) {
+            throw new Error(response.data.message || '채팅방 숨기기에 실패했습니다.');
+        }
+    } catch (error: any) {
+        console.error('Hide chat room error:', error);
+        console.error('Error response:', error.response?.data);
+        throw error;
+    }
+};

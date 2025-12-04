@@ -28,17 +28,23 @@ const BottomNav = () => {
       ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-      <div className="max-w-screen-xl mx-auto flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/98 backdrop-blur-2xl border-t border-purple-100/50 z-50 shadow-[0_-2px_20px_rgba(139,92,246,0.08)]">
+      <div className="max-w-screen-xl mx-auto flex justify-around items-center h-[72px] px-3">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors"
-            activeClassName="text-primary"
+            className="relative flex flex-col items-center justify-center flex-1 h-full gap-1.5 rounded-2xl transition-all duration-300 text-gray-400 hover:text-purple-600 hover:bg-purple-50/40 active:scale-95"
+            activeClassName="text-purple-600 [&>svg]:scale-110 [&>svg]:text-purple-600 [&>span]:font-semibold [&>span]:text-purple-600 [&_.indicator]:opacity-100 [&_.bg-indicator]:opacity-100"
           >
-            <item.icon className="w-5 h-5" />
-            <span className="text-xs">{item.label}</span>
+            {/* 활성 상태 인디케이터 */}
+            <div className="indicator absolute top-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 opacity-0 transition-opacity duration-300" />
+            
+            <item.icon className="w-[22px] h-[22px] transition-all duration-300" />
+            <span className="text-[11px] font-medium transition-all duration-300">{item.label}</span>
+            
+            {/* 활성 상태 배경 */}
+            <div className="bg-indicator absolute inset-0 rounded-2xl bg-purple-50/30 opacity-0 transition-opacity duration-300 -z-10" />
           </NavLink>
         ))}
       </div>
