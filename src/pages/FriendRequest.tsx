@@ -6,20 +6,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, User, Check, X, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Check, X, Loader2, UserPlus, Send } from "lucide-react";
 import { 
   getFriendRequests, 
   acceptFriendRequest, 
   rejectFriendRequest,
+  sendFriendRequest,
   FriendResponse 
 } from "@/lib/api/friends";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const FriendRequests = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState<FriendResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
+  const [friendIdInput, setFriendIdInput] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -78,6 +82,33 @@ const FriendRequests = () => {
     }
   };
 
+  const handleSendFriendRequest = async () => {
+    const receiverId = parseInt(friendIdInput.trim());
+    
+    if (!friendIdInput.trim()) {
+      toast.error('사용자 ID를 입력해주세요.');
+      return;
+    }
+    
+    if (isNaN(receiverId) || receiverId <= 0) {
+      toast.error('올바른 사용자 ID를 입력해주세요.');
+      return;
+    }
+
+    setIsSendingRequest(true);
+    try {
+      await sendFriendRequest(receiverId);
+      toast.success(`사용자 #${receiverId}님에게 친구 요청을 보냈습니다.`);
+      setFriendIdInput("");
+      // 요청 목록 새로고침
+      await fetchRequests();
+    } catch (error: any) {
+      toast.error(error.message || '친구 요청 전송에 실패했습니다.');
+    } finally {
+      setIsSendingRequest(false);
+    }
+  };
+
   // 받은 요청 (내가 수락/거절 가능) - PENDING 상태만
   const receivedRequests = requests.filter(req => !req.isSentByMe && req.status === 'PENDING');
   // 보낸 요청
@@ -86,54 +117,81 @@ const FriendRequests = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
-      <main className="max-w-screen-xl mx-auto px-4 py-6">
+      <main className="max-w-screen-xl mx-auto px-4 py-4">
         {/* 뒤로가기 헤더 */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-6 px-1">
           <button 
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
+            className="p-2 hover:bg-muted rounded-xl transition-all duration-200 active:scale-95"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-xl font-bold">친구 요청</h1>
+          <h1 className="text-2xl font-bold text-foreground">친구 요청</h1>
         </div>
 
         <Tabs defaultValue="received" className="w-full">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="received" className="flex-1">
-              받은 요청 {receivedRequests.length > 0 && `(${receivedRequests.length})`}
+          <TabsList className="w-full mb-6 bg-muted/50 rounded-2xl p-1.5">
+            <TabsTrigger 
+              value="received" 
+              className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 font-medium"
+            >
+              받은 요청 {receivedRequests.length > 0 && (
+                <span className="ml-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                  {receivedRequests.length}
+                </span>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="sent" className="flex-1">
-              보낸 요청 {sentRequests.length > 0 && `(${sentRequests.length})`}
+            <TabsTrigger 
+              value="sent" 
+              className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200 font-medium"
+            >
+              보낸 요청 {sentRequests.length > 0 && (
+                <span className="ml-1.5 px-2 py-0.5 rounded-full bg-muted-foreground/20 text-muted-foreground text-xs font-semibold">
+                  {sentRequests.length}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="received">
+          <TabsContent value="received" className="mt-0">
             {isLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                <p className="text-sm text-muted-foreground">로딩 중...</p>
               </div>
             ) : receivedRequests.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">
-                <p>받은 친구 요청이 없습니다.</p>
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <User className="w-10 h-10 text-primary" />
+                </div>
+                <p className="text-lg font-semibold text-foreground mb-1">받은 친구 요청이 없어요</p>
+                <p className="text-sm text-muted-foreground text-center">친구들이 요청을 보내면 여기에 표시됩니다</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {receivedRequests.map((request) => (
-                  <Card key={request.id} className="border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
-                          <AvatarFallback className="bg-primary/10">
-                            <User className="w-6 h-6 text-primary" />
+                  <Card 
+                    key={request.id} 
+                    className="border border-border bg-card rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/20"
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-14 h-14 ring-2 ring-primary/10">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                            <User className="w-7 h-7" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground">
+                          <p className="font-semibold text-foreground text-base mb-1">
                             사용자 #{request.senderId}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(request.createdAt).toLocaleDateString()}
+                            {new Date(request.createdAt).toLocaleDateString('ko-KR', { 
+                              month: 'long', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -142,23 +200,27 @@ const FriendRequests = () => {
                             variant="outline"
                             onClick={() => handleReject(request.id)}
                             disabled={processingIds.has(request.id)}
-                            className="text-destructive hover:text-destructive"
+                            className="h-10 w-10 rounded-xl border-border hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-200 active:scale-95"
                           >
                             {processingIds.has(request.id) ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <X className="w-4 h-4" />
+                              <X className="w-5 h-5" />
                             )}
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => handleAccept(request.id)}
                             disabled={processingIds.has(request.id)}
+                            className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 active:scale-95 font-medium"
                           >
                             {processingIds.has(request.id) ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <Check className="w-4 h-4" />
+                              <>
+                                <Check className="w-5 h-5 mr-1.5" />
+                                수락
+                              </>
                             )}
                           </Button>
                         </div>
@@ -170,41 +232,116 @@ const FriendRequests = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="sent">
+          <TabsContent value="sent" className="mt-0">
+            {/* 친구 초대 섹션 */}
+            <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10 rounded-3xl p-6 mb-6 border border-primary/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                  <UserPlus className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-base">친구 초대하기</h3>
+                  <p className="text-xs text-muted-foreground">사용자 ID로 친구를 찾아보세요</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <Input
+                    type="number"
+                    placeholder="사용자 ID를 입력하세요"
+                    value={friendIdInput}
+                    onChange={(e) => setFriendIdInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSendFriendRequest();
+                      }
+                    }}
+                    className="h-12 rounded-xl border-border bg-background text-base pl-4 pr-4 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                    disabled={isSendingRequest}
+                  />
+                </div>
+                <Button
+                  onClick={handleSendFriendRequest}
+                  disabled={isSendingRequest || !friendIdInput.trim()}
+                  className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed font-medium shrink-0"
+                >
+                  {isSendingRequest ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5 mr-1.5" />
+                      전송
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
             {isLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                <p className="text-sm text-muted-foreground">로딩 중...</p>
               </div>
             ) : sentRequests.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">
-                <p>보낸 친구 요청이 없습니다.</p>
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Send className="w-10 h-10 text-primary" />
+                </div>
+                <p className="text-lg font-semibold text-foreground mb-1">보낸 친구 요청이 없어요</p>
+                <p className="text-sm text-muted-foreground text-center">위에서 친구를 초대해보세요</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {sentRequests.map((request) => (
-                  <Card key={request.id} className="border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
-                          <AvatarFallback className="bg-primary/10">
-                            <User className="w-6 h-6 text-primary" />
+                  <Card 
+                    key={request.id} 
+                    className="border border-border bg-card rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/20"
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-4">
+                        <Avatar className={`w-14 h-14 ring-2 ${
+                          request.status === 'ACCEPTED' 
+                            ? 'ring-primary/10' 
+                            : 'ring-muted'
+                        }`}>
+                          <AvatarFallback className={`${
+                            request.status === 'ACCEPTED'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
+                          } text-lg font-semibold`}>
+                            <User className="w-7 h-7" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground">
+                          <p className="font-semibold text-foreground text-base mb-1">
                             사용자 #{request.receiverId}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(request.createdAt).toLocaleDateString()}
+                            {new Date(request.createdAt).toLocaleDateString('ko-KR', { 
+                              month: 'long', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </p>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
+                        <div className={`px-4 py-2 rounded-xl font-medium text-sm ${
                           request.status === 'ACCEPTED' 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-primary/10 text-primary border border-primary/20' 
+                            : 'bg-muted text-muted-foreground border border-border'
                         }`}>
-                          {request.status === 'ACCEPTED' ? '수락됨' : '대기중'}
-                        </span>
+                          {request.status === 'ACCEPTED' ? (
+                            <span className="flex items-center gap-1.5">
+                              <Check className="w-4 h-4" />
+                              수락됨
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              대기중
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
