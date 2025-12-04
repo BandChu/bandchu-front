@@ -297,6 +297,103 @@ const Chatting = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ----- CREATE CHAT ROOM DIALOG ----- */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>새 채팅방 만들기</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="roomType">채팅방 유형</Label>
+              <Select
+                value={roomType}
+                onValueChange={(value) => setRoomType(value as RoomType)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={RoomType.GROUP}>그룹 채팅</SelectItem>
+                  <SelectItem value={RoomType.DIRECT}>1:1 채팅</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {roomType === RoomType.GROUP && (
+              <div>
+                <Label htmlFor="roomName">채팅방 이름</Label>
+                <Input
+                  id="roomName"
+                  placeholder="채팅방 이름을 입력하세요"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                />
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="memberIds">사용자 ID (쉼표로 구분)</Label>
+              <Input
+                id="memberIds"
+                placeholder="예: 1, 2, 3"
+                value={memberIds}
+                onChange={(e) => setMemberIds(e.target.value)}
+              />
+            </div>
+
+            <Button onClick={handleCreateChatRoom} className="w-full">
+              채팅방 생성
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ----- HIDDEN ROOMS DIALOG ----- */}
+      <Dialog open={hiddenRoomsDialogOpen} onOpenChange={setHiddenRoomsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>숨긴 채팅방</DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-2 max-h-72 overflow-y-auto">
+            {getHiddenRooms().length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                숨긴 채팅방이 없습니다
+              </p>
+            ) : (
+              getHiddenRooms().map(room => (
+                <div
+                  key={room.roomId}
+                  className="flex items-center justify-between p-3 hover:bg-accent rounded-lg"
+                >
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      navigate(`/chat/${room.roomId}`);
+                      setHiddenRoomsDialogOpen(false);
+                    }}
+                  >
+                    <h4>{room.name || `채팅방 ${room.roomId}`}</h4>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {room.lastMessage}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleUnhideChatRoom(room.roomId)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BottomNav />
     </div>
   );
