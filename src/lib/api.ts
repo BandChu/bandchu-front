@@ -5,8 +5,9 @@ const getBaseURL = () => {
   if (import.meta.env.DEV) {
     return '';
   }
-  // 프로덕션 환경에서는 배포 서버 사용
-  return import.meta.env.VITE_API_BASE_URL || 'https://bandchu.o-r.kr';
+  // 프로덕션 환경에서는 Vercel Serverless Function 프록시 사용
+  // Vercel 프록시는 같은 도메인에서 동작하므로 CORS 문제 없음
+  return '';
 };
 
 const apiClient = axios.create({
