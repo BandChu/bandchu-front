@@ -12,13 +12,13 @@ export default defineConfig(({ mode }) => ({
     port: 8000,
     proxy: {
       '/api': {
-        target: 'https://bandchu.o-r.kr',  // 배포 서버로 프록시 (CORS 문제 해결)
+        target: 'https://bandchu.o-r.kr',  // 로컬 백엔드로 변경
         changeOrigin: true,
         secure: true,  // HTTPS이므로 true
         rewrite: (path) => path,  // 경로 그대로 전달
       },
       '/ws-chat': {
-        target: 'https://bandchu.o-r.kr',  // 배포 서버로 프록시
+        target: 'https://bandchu.o-r.kr',  // 로컬 백엔드로 변경
         changeOrigin: true,
         secure: true,  // HTTPS이므로 true
         ws: true,
