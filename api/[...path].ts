@@ -6,6 +6,10 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
+  // 함수가 실행되는지 확인하기 위한 로깅
+  console.log(`[API Proxy Handler] ${req.method} ${req.url}`);
+  console.log(`[API Proxy Handler] Query:`, req.query);
+  
   // CORS preflight 요청 처리
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -77,11 +81,14 @@ export default async function handler(
     // 응답 상태 코드와 데이터 반환
     res.status(response.status).json(data);
   } catch (error: any) {
-    console.error('API 프록시 오류:', error);
+    console.error('[API Proxy] 오류 발생:', error);
+    console.error('[API Proxy] 오류 스택:', error.stack);
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
     res.status(500).json({ 
       success: false, 
-      message: error.message || 'API 호출 중 오류가 발생했습니다.' 
+      message: error.message || 'API 호출 중 오류가 발생했습니다.',
+      error: error.toString()
     });
   }
 }
