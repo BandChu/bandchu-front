@@ -43,10 +43,15 @@ const Chatting = () => {
     if (diffHours < 24) return `${diffHours}시간 전`;
     return `${Math.floor(diffHours / 24)}일 전`;
   };
+const sortedRooms = [...chatRooms].sort((a, b) => {
+  const timeA = new Date(a.lastMessageTime || a.createdAt).getTime();
+  const timeB = new Date(b.lastMessageTime || b.createdAt).getTime();
+  return timeB - timeA; // 최신 순
+});
 
-  const filteredRooms = chatRooms.filter(room =>
-    room.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const filteredRooms = sortedRooms.filter(room =>
+  room.username.toLowerCase().includes(searchQuery.toLowerCase())
+);
 
   return (
     <div className="min-h-screen bg-background pb-20">
