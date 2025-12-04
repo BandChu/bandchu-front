@@ -38,24 +38,51 @@ export const getSubscribedConcerts = async (): Promise<SubscribedConcertsRespons
   try {
     const response = await apiClient.get<any>('/api/concerts/subscribed');
     
+    // 디버깅을 위한 응답 로깅 (개발 환경에서만)
+    if (import.meta.env.DEV) {
+      console.log('getSubscribedConcerts 응답:', JSON.stringify(response.data, null, 2));
+    }
+    
     // 응답 구조가 다를 수 있으므로 여러 경우를 처리
-    if (response.data?.data?.artists) {
-      // { data: { artists: [...] } } 구조
+    // 1. ApiResponse<SubscribedConcertsResponse> 구조: { success: true, data: { artists: [...] } }
+    if (response.data?.success && response.data?.data?.artists) {
       return response.data.data as SubscribedConcertsResponse;
-    } else if (response.data?.artists) {
-      // { artists: [...] } 구조 (직접)
-      return response.data as SubscribedConcertsResponse;
-    } else if (response.data?.data) {
-      // 다른 구조일 수 있음
+    }
+    
+    // 2. ApiResponse이지만 data가 직접 SubscribedConcertsResponse인 경우: { success: true, data: { artists: [...] } }
+    if (response.data?.success && response.data?.data) {
       const data = response.data.data;
-      if (data.artists) {
+      if (data.artists && Array.isArray(data.artists)) {
         return data as SubscribedConcertsResponse;
       }
     }
     
-    throw new Error('응답 구조가 예상과 다릅니다.');
+    // 3. 직접 SubscribedConcertsResponse 구조: { artists: [...] }
+    if (response.data?.artists && Array.isArray(response.data.artists)) {
+      return response.data as SubscribedConcertsResponse;
+    }
+    
+    // 4. data 필드 안에 있는 경우: { data: { artists: [...] } }
+    if (response.data?.data?.artists && Array.isArray(response.data.data.artists)) {
+      return response.data.data as SubscribedConcertsResponse;
+    }
+    
+    // 5. 빈 응답인 경우 빈 배열 반환
+    if (!response.data || (response.data.success === false && !response.data.data)) {
+      console.warn('구독한 공연 데이터가 없습니다.');
+      return { artists: [] };
+    }
+    
+    // 예상치 못한 응답 구조인 경우 로깅 후 에러 발생
+    console.error('예상치 못한 응답 구조:', response.data);
+    throw new Error(`응답 구조가 예상과 다릅니다. 응답: ${JSON.stringify(response.data)}`);
   } catch (error: any) {
     console.error("getSubscribedConcerts 에러:", error);
+    // 에러 발생 시 빈 배열 반환하여 앱이 계속 작동하도록 함
+    if (error.response?.status === 404 || error.response?.status === 401) {
+      console.warn('구독한 공연 데이터를 가져올 수 없습니다. 빈 배열을 반환합니다.');
+      return { artists: [] };
+    }
     throw error;
   }
 };

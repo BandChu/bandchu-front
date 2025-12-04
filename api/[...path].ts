@@ -16,7 +16,8 @@ export default async function handler(
 
   const { path, ...queryParams } = req.query;
   const pathString = Array.isArray(path) ? path.join('/') : path || '';
-  const apiPath = pathString ? `/${pathString}` : '';
+  // /api 접두사를 유지하여 백엔드 API 경로와 일치시킴
+  const apiPath = pathString ? `/api/${pathString}` : '/api';
 
   // path를 제외한 쿼리 파라미터만 URL에 추가
   const queryEntries = Object.entries(queryParams).filter(([key]) => key !== 'path');
@@ -25,6 +26,9 @@ export default async function handler(
     : '';
   
   const url = `${API_BASE_URL}${apiPath}${queryString}`;
+
+  // 디버깅을 위한 로깅
+  console.log(`[API Proxy] ${req.method} ${url}`);
 
   try {
     // 요청 헤더 준비
@@ -64,6 +68,11 @@ export default async function handler(
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Content-Type 헤더 명시적으로 설정 (axios가 JSON 파싱을 제대로 하도록)
+    if (contentType && contentType.includes('application/json')) {
+      res.setHeader('Content-Type', 'application/json');
+    }
 
     // 응답 상태 코드와 데이터 반환
     res.status(response.status).json(data);
