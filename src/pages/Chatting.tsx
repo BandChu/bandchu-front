@@ -85,7 +85,7 @@ const filteredRooms = sortedRooms.filter(room =>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {chatRooms.map((room) => (
+            {sortedRooms.map((room) => (
               <button
                 key={room.id}
                 onClick={() => navigate(`/chat/${room.username}?user=${room.username}&board=${encodeURIComponent(room.board)}`)}
