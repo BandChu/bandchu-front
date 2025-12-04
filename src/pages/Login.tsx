@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import GoogleIcon from "@/components/GoogleIcon";
 import { ArrowLeft, UserCircle } from "lucide-react";
-import { login, LoginRequest } from "@/lib/api/auth";
+import { login, LoginRequest, googleOAuth } from "@/lib/api/auth";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { handleGoogleSignIn, getGoogleClientId } from "@/lib/utils/googleAuth";
+import { parseJwt } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
@@ -17,10 +20,9 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-import { parseJwt } from "@/lib/utils";
-
 const Login = () => {
   const navigate = useNavigate();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -28,6 +30,92 @@ const Login = () => {
       password: "",
     },
   });
+
+  // Google Identity Services 로드 확인
+  useEffect(() => {
+    const checkGoogleLoaded = () => {
+      if (window.google) {
+        return;
+      }
+      // Google 스크립트가 로드될 때까지 대기
+      setTimeout(checkGoogleLoaded, 100);
+    };
+    checkGoogleLoaded();
+  }, []);
+
+  const handleGoogleAuth = async () => {
+    setIsGoogleLoading(true);
+
+    try {
+      const clientId = await getGoogleClientId();
+      if (!clientId) {
+        toast.error('구글 로그인 설정이 완료되지 않았습니다.');
+        setIsGoogleLoading(false);
+        return;
+      }
+
+      // 타임아웃 설정: 10초 후 자동으로 로딩 해제 (사용자가 팝업을 닫으면 콜백이 호출되지 않을 수 있음)
+      const timeoutId = setTimeout(() => {
+        setIsGoogleLoading(false);
+        toast.error('구글 로그인 시간이 초과되었습니다. 다시 시도해주세요.');
+      }, 10 * 1000); // 10초
+
+      handleGoogleSignIn({
+        clientId,
+      onSuccess: async (idToken: string) => {
+        clearTimeout(timeoutId);
+        try {
+          const response = await googleOAuth({ idToken });
+          
+          // 토큰 저장
+          localStorage.setItem('accessToken', response.accessToken);
+          localStorage.setItem('refreshToken', response.refreshToken);
+          
+          // JWT 파싱하여 userRole 저장
+          const decodedToken = parseJwt(response.accessToken);
+          if (decodedToken && decodedToken.role) {
+            localStorage.setItem('userRole', decodedToken.role);
+          }
+          
+          // 사용자 정보 저장
+          localStorage.setItem('userEmail', decodedToken?.email || '');
+          localStorage.setItem('userNickname', response.nickname);
+          
+          setIsGoogleLoading(false);
+          
+          // 신규 회원인 경우 프로필 설정으로, 기존 회원인 경우 홈으로
+          if (response.isNewMember) {
+            toast.success('구글 회원가입이 완료되었습니다. 프로필을 설정해주세요.');
+            navigate("/signup/profile", { 
+              state: { 
+                userType: decodedToken?.role || 'FAN'
+              } 
+            });
+          } else {
+            toast.success('구글 로그인 성공');
+            navigate("/home");
+          }
+        } catch (error: any) {
+          setIsGoogleLoading(false);
+          const errorMessage = 
+            error.response?.data?.message || 
+            error.message || 
+            '구글 로그인에 실패했습니다.';
+          toast.error(errorMessage);
+        }
+      },
+      onError: (error: string) => {
+        clearTimeout(timeoutId);
+        setIsGoogleLoading(false);
+        toast.error(error);
+      },
+      });
+    } catch (error: any) {
+      setIsGoogleLoading(false);
+      const errorMessage = error.message || '구글 로그인 설정을 불러오는데 실패했습니다.';
+      toast.error(errorMessage);
+    }
+  };
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
@@ -141,12 +229,11 @@ const Login = () => {
           <Button
             variant="outline"
             className="w-full h-14 text-base font-medium border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-all rounded-xl flex items-center justify-center gap-3"
-            onClick={() => {
-              toast.info('구글 로그인 기능은 현재 미구현입니다.');
-            }}
+            onClick={handleGoogleAuth}
+            disabled={isGoogleLoading}
           >
             <GoogleIcon className="w-5 h-5" />
-            구글 로그인
+            {isGoogleLoading ? '처리 중...' : '구글 로그인'}
           </Button>
         </div>
       </div>

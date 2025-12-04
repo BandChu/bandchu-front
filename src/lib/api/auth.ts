@@ -36,12 +36,15 @@ export interface ProfileSetupResponse {
 }
 
 export interface GoogleOAuthRequest {
-  code: string;
+  idToken: string;
 }
 
 export interface GoogleOAuthResponse {
   accessToken: string;
   refreshToken: string;
+  isNewMember: boolean;
+  memberId: number;
+  nickname: string;
 }
 
 export interface RefreshTokenRequest {
@@ -107,5 +110,16 @@ export const logout = async (): Promise<void> => {
 // 회원탈퇴
 export const deleteAccount = async (): Promise<void> => {
   await apiClient.delete('/api/members/me');
+};
+
+// Google OAuth Client ID 조회 (공개 설정)
+export const fetchGoogleClientId = async (): Promise<string> => {
+  try {
+    const response = await apiClient.get<{ data: { clientId: string } }>('/api/config/google-client-id');
+    return response.data.data.clientId;
+  } catch (error) {
+    console.error('Google Client ID 조회 실패:', error);
+    throw error;
+  }
 };
 

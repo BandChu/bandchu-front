@@ -19,7 +19,12 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const publicEndpoints = ['/api/members/login', '/api/members/signup', '/api/members/token/refresh'];
+    const publicEndpoints = [
+      '/api/members/login', 
+      '/api/members/signup', 
+      '/api/members/token/refresh',
+      '/api/config/google-client-id' 
+    ];
 
     const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
