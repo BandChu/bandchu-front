@@ -12,12 +12,12 @@ export default defineConfig(({ mode }) => ({
     port: 8000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',  // 로컬 백엔드로 변경
+        target: 'https://bandchu.o-r.kr',  // 로컬 백엔드로 변경
         changeOrigin: true,
         secure: false,  // HTTP이므로 false
       },
       '/ws-chat': {
-        target: 'http://localhost:8080',  // 로컬 백엔드로 변경
+        target: 'https://bandchu.o-r.kr',  // 로컬 백엔드로 변경
         changeOrigin: true,
         secure: false,  // HTTP이므로 false
         ws: true,
