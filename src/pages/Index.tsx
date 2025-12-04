@@ -19,14 +19,29 @@ const transformDataToCalendarEvents = (data: SubscribedConcertsResponse): Calend
 
   data.artists.forEach((artist) => {
     artist.concerts.forEach((concert) => {
-      concert.performingSchedule.forEach(schedule => {
-        events.push({
-          type: 'performance', artistId: artist.artistId, artistName: artist.name,
-          profileImageUrl: artist.profileImageUrl, date: schedule.date, title: concert.title,
-          place: concert.place, bookingUrl: concert.bookingUrl, posterImageUrl: concert.posterImageUrl,
-          concertId: concert.concertId, scheduleId: schedule.id,
+      if (concert.performingSchedule && concert.performingSchedule.length > 0) {
+        concert.performingSchedule.forEach(schedule => {
+          if (!schedule.date) {
+            console.error(`[캘린더] ${artist.name} - "${concert.title}": schedule.date가 없습니다.`, schedule);
+            return;
+          }
+          
+          events.push({
+            type: 'performance' as const, 
+            artistId: artist.artistId, 
+            artistName: artist.name,
+            profileImageUrl: artist.profileImageUrl, 
+            date: schedule.date, 
+            title: concert.title,
+            place: concert.place, 
+            bookingUrl: concert.bookingUrl, 
+            posterImageUrl: concert.posterImageUrl,
+            concertId: concert.concertId, 
+            scheduleId: schedule.id,
+          });
         });
-      });
+      }
+      
       // 2. 예매일정 이벤트 추가
       if (concert.bookingSchedule && concert.bookingSchedule !== 'null') {
         events.push({
@@ -45,6 +60,7 @@ const transformDataToCalendarEvents = (data: SubscribedConcertsResponse): Calend
       }
     });
   });
+  
   return events;
 };
 
