@@ -193,14 +193,19 @@ const My = () => {
                       onClick={item.onClick}
                       className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent/50 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center relative">
                         <Icon className="w-5 h-5 text-foreground" />
+                        {item.badge && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center px-1 rounded-full border-2 border-background shadow-md">
+                            {item.badge}
+                          </span>
+                        )}
                       </div>
                       <span className="flex-1 text-left font-medium text-foreground">
                         {item.label}
                       </span>
                       {item.badge && (
-                        <span className="bg-destructive text-destructive-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                        <span className="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full min-w-[28px] h-7 flex items-center justify-center shadow-sm">
                           {item.badge}
                         </span>
                       )}
