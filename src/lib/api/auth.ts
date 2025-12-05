@@ -52,6 +52,7 @@ export interface GoogleOAuthResponse {
   accessToken: string;
   refreshToken: string;
   isNewMember: boolean;
+  isProfileCompleted?: boolean; // 프로필 설정 완료 여부
   memberId: number;
   nickname: string;
 }

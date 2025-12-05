@@ -78,7 +78,13 @@ const ProfileSetup = () => {
       if (profileResponse.profileImageUrl) {
         localStorage.setItem('userProfileImage', profileResponse.profileImageUrl);
       }
-      toast.success('프로필 설정이 완료되었습니다.');
+      
+      // 구글 회원가입인 경우 회원가입 완료 메시지 표시
+      if (isGoogleSignup) {
+        toast.success('회원가입이 완료되었습니다!');
+      } else {
+        toast.success('프로필 설정이 완료되었습니다.');
+      }
       navigate("/home");
     } catch (error: any) {
       // 네트워크 에러인지 확인

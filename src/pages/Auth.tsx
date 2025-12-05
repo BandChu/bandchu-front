@@ -67,9 +67,9 @@ const Auth = () => {
           
           setIsGoogleLoading(false);
           
-          // 신규 회원인 경우 아티스트/팬 선택으로, 기존 회원인 경우 홈으로
-          if (response.isNewMember) {
-            toast.success('구글 회원가입이 완료되었습니다. 회원 유형을 선택해주세요.');
+          // 신규 회원이거나 프로필 미완료인 경우 회원가입 플로우 진행
+          if (response.isNewMember || response.isProfileCompleted === false) {
+            toast.info('회원 유형을 선택해주세요.');
             navigate("/signup/type", { 
               state: { 
                 isGoogleSignup: true,
