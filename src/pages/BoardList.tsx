@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Plus, Search, MessageSquare, User, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
@@ -9,6 +9,7 @@ import { getPostsByType, boardIdToPostType, PostListItem } from "@/lib/api/posts
 const BoardList = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [posts, setPosts] = useState<PostListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,7 @@ const BoardList = () => {
     };
 
     fetchPosts();
-  }, [boardId]);
+  }, [boardId, location.pathname]); // location.pathname 추가하여 페이지로 돌아올 때마다 새로고침
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

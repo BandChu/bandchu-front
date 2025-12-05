@@ -145,7 +145,9 @@ export const boardIdToBoardName: Record<string, string> = {
 
 // 모든 게시판의 최신 글 1개씩 조회
 export const getAllPosts = async (): Promise<PostListResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/posts`);
+  const response = await fetch(`${API_BASE_URL}/api/posts`, {
+    headers: getAuthHeaders(),
+  });
   
   if (!response.ok) {
     throw new Error("게시글을 불러오는데 실패했습니다.");
@@ -162,7 +164,10 @@ export const getPostsByType = async (
   size: number = 10
 ): Promise<PostListResponse> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/posts/postType?type=${type}&page=${page}&size=${size}`
+    `${API_BASE_URL}/api/posts/postType?type=${type}&page=${page}&size=${size}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
 
   if (!response.ok) {
@@ -176,7 +181,7 @@ export const getPostsByType = async (
 // 게시글 상세 조회
 export const getPostDetail = async (postId: number): Promise<PostDetailResponse> => {
   const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-  //  headers: getAuthHeaders(),
+    headers: getAuthHeaders(),
   });
 
   if (!response.ok) {
