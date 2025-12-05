@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import { signup, login } from "@/lib/api/auth";
+import { signup, login, deleteAccount } from "@/lib/api/auth";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -115,7 +115,22 @@ const SignupForm = () => {
     setIsCancelDialogOpen(true);
   };
 
-  const handleCancelSignup = () => {
+  const handleCancelSignup = async () => {
+    setIsCancelDialogOpen(false);
+    
+    // 이미 회원가입이 완료된 경우 백엔드에서 회원 삭제
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        await deleteAccount();
+      }
+    } catch (error: any) {
+      // 회원 삭제 실패 시에도 프론트엔드 정리는 진행
+      // (이미 삭제된 경우 등 idempotent 특성으로 인해 실패할 수 있음)
+      console.error('회원 삭제 실패:', error);
+      // 에러가 발생해도 사용자에게는 정상적으로 취소되었다고 표시
+    }
+    
     // 회원가입 취소: 저장된 토큰 및 사용자 정보 삭제
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -125,7 +140,6 @@ const SignupForm = () => {
     localStorage.removeItem('userRole');
     
     toast.info('회원가입이 취소되었습니다.');
-    setIsCancelDialogOpen(false);
     navigate("/auth");
   };
 
