@@ -144,13 +144,14 @@ export const updateMemberRole = async (data: UpdateRoleRequest): Promise<UpdateR
 
 // 사용자 정보 조회
 export const getMemberInfo = async (): Promise<MemberInfoResponse> => {
-  const response = await apiClient.get<{ data: MemberInfoResponse } | MemberInfoResponse>('/api/members/me');
+  const response = await apiClient.get<{ success: boolean; data: MemberInfoResponse; message: string }>('/api/members/me');
   
-  // 응답 구조에 따라 처리
-  if (response.data && 'data' in response.data && response.data.data) {
+  // 백엔드 응답 구조: { success: true, data: { memberId, email, nickname, role, profileImageUrl }, message: "..." }
+  if (response.data && response.data.data) {
     return response.data.data;
   }
-  return response.data as MemberInfoResponse;
+  
+  throw new Error('사용자 정보 조회 응답 구조가 올바르지 않습니다.');
 };
 
 // Google OAuth Client ID 조회 (공개 설정)

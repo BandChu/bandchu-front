@@ -27,20 +27,51 @@ import {
   UserCheck
 } from "lucide-react";
 import { getFriendRequests, FriendResponse } from "@/lib/api/friends";
+import { getMemberInfo } from "@/lib/api/auth";
 import { toast } from "sonner";
 
 const My = () => {
   const navigate = useNavigate();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
-
-  // localStorage에서 사용자 정보 가져오기
-  const userInfo = {
+  const [userInfo, setUserInfo] = useState({
+    memberId: 0,
     nickname: localStorage.getItem('userNickname') || "사용자",
     email: localStorage.getItem('userEmail') || "",
     profileImageUrl: localStorage.getItem('userProfileImage') || "",
     role: (localStorage.getItem('userRole') as "FAN" | "ARTIST") || "FAN"
-  };
+  });
+  const [isLoadingUserInfo, setIsLoadingUserInfo] = useState(true);
+
+  // 사용자 정보 조회
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const memberInfo = await getMemberInfo();
+        setUserInfo({
+          memberId: memberInfo.memberId,
+          nickname: memberInfo.nickname,
+          email: memberInfo.email,
+          profileImageUrl: memberInfo.profileImageUrl || "",
+          role: memberInfo.role
+        });
+        // localStorage에도 최신 정보 저장
+        localStorage.setItem('userNickname', memberInfo.nickname);
+        localStorage.setItem('userEmail', memberInfo.email);
+        localStorage.setItem('userRole', memberInfo.role);
+        if (memberInfo.profileImageUrl) {
+          localStorage.setItem('userProfileImage', memberInfo.profileImageUrl);
+        }
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        // API 실패 시 localStorage 값 사용 (이미 초기값으로 설정됨)
+      } finally {
+        setIsLoadingUserInfo(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   // 받은 친구 요청 수 조회
   useEffect(() => {
@@ -134,10 +165,15 @@ const My = () => {
                   <p className="text-sm text-muted-foreground truncate">
                     {userInfo.email}
                   </p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       {userInfo.role === "FAN" ? "팬" : "아티스트"}
                     </span>
+                    {userInfo.memberId > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        ID: {userInfo.memberId}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
