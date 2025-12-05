@@ -206,7 +206,7 @@ const Login = () => {
           <Button
             variant="outline"
             className="w-full h-14 text-base font-medium border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-all rounded-xl"
-            onClick={() => navigate("/signup/type")}
+            onClick={() => navigate("/signup/form")}
           >
             회원가입
           </Button>
