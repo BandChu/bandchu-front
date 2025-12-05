@@ -63,3 +63,18 @@ export interface UpdateReadStatusResponse {
     roomId: number;
     lastReadMessageId: number;
 }
+
+export interface ChatRoomDetail {
+  roomId: number;
+  roomType: 'DIRECT' | 'GROUP';
+  name: string;
+  members: ChatRoomMember[];
+  createdAt: string;
+}
+
+export interface ChatRoomMember {
+  userId: number;
+  username: string;
+  profileImage?: string;
+  role?: string;
+}

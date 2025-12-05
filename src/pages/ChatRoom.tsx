@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { getMessages, sendMessage as sendMessageApi, updateReadStatus } from "@/lib/api/chat";
-import { ChatMessage, MessageType } from "@/types/chat";
+import { getMessages, sendMessage as sendMessageApi, updateReadStatus, getChatRoomDetail } from "@/lib/api/chat"; // 🔥 getChatRoomDetail 추가
+import { ChatMessage, MessageType, ChatRoomDetail } from "@/types/chat"; // 🔥 ChatRoomDetail 추가
 import { getWebSocketClient } from "@/lib/websocket";
 import { jwtDecode } from "jwt-decode";
 import BottomNav from "@/components/BottomNav";
@@ -23,11 +23,12 @@ const ChatRoom = () => {
   const { roomId } = useParams();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [roomDetail, setRoomDetail] = useState<ChatRoomDetail | null>(null); // 🔥 추가
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true); 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null); 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const wsClient = useRef(getWebSocketClient());
 
   const getCurrentUserId = (): number => {
@@ -52,6 +53,26 @@ const ChatRoom = () => {
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
+  };
+
+  // 🔥 채팅방 정보 로드
+  const loadRoomDetail = async () => {
+    if (!roomId) return;
+
+    try {
+      const detail = await getChatRoomDetail(parseInt(roomId));
+      setRoomDetail(detail);
+    } catch (error) {
+      console.error('Failed to load room detail:', error);
+    }
+  };
+
+  // 🔥 발신자 이름 가져오기
+  const getSenderName = (senderId: number): string => {
+    if (!roomDetail) return '사용자';
+    
+    const member = roomDetail.members?.find(m => m.userId === senderId);
+    return member?.username || '사용자';
   };
 
   // 메시지 목록 로드 및 읽음 처리
@@ -92,7 +113,8 @@ const ChatRoom = () => {
   useEffect(() => {
     if (!roomId) return;
 
-    setIsInitialLoad(true); // 🔥 추가
+    setIsInitialLoad(true);
+    loadRoomDetail(); // 🔥 채팅방 정보 로드
     loadMessages();
 
     const client = wsClient.current;
@@ -115,7 +137,7 @@ const ChatRoom = () => {
     };
   }, [roomId]);
 
-  // 🔥 새 메시지 추가 시 부드럽게 스크롤 (초기 로드 제외)
+  // 새 메시지 추가 시 부드럽게 스크롤 (초기 로드 제외)
   useEffect(() => {
     if (!isInitialLoad && messages.length > 0) {
       scrollToBottom('smooth');
@@ -172,7 +194,7 @@ const ChatRoom = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - 🔥 채팅방 이름 표시 */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
         <div className="flex items-center gap-4 max-w-screen-xl mx-auto">
           <button
@@ -184,18 +206,26 @@ const ChatRoom = () => {
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-gray-100">
               <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
-                <User className="w-5 h-5 text-gray-500" />
+                {roomDetail?.roomType === 'GROUP' ? (
+                  <Users className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <User className="w-5 h-5 text-gray-500" />
+                )}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <h1 className="font-semibold text-gray-900 truncate">채팅방 {roomId}</h1>
-              <p className="text-xs text-gray-500">온라인</p>
+              <h1 className="font-semibold text-gray-900 truncate">
+                {roomDetail?.name || `채팅방 ${roomId}`}
+              </h1>
+              <p className="text-xs text-gray-500">
+                {roomDetail?.members ? `${roomDetail.members.length}명` : '온라인'}
+              </p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Messages - 🔥 ref 추가 */}
+      {/* Messages - 🔥 발신자 이름 표시 */}
       <div 
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto px-4 py-6 space-y-3 pb-32"
@@ -209,8 +239,10 @@ const ChatRoom = () => {
             />
           </div>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg, index) => {
             const isMine = msg.senderId === currentUserId;
+            const prevMsg = index > 0 ? messages[index - 1] : null;
+            const showSenderName = !isMine && (prevMsg?.senderId !== msg.senderId);
 
             return (
               <div
@@ -226,6 +258,13 @@ const ChatRoom = () => {
                 )}
 
                 <div className={`flex flex-col gap-1 ${isMine ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                  {/* 🔥 발신자 이름 (연속된 메시지가 아닐 때만 표시) */}
+                  {showSenderName && (
+                    <span className="text-xs text-gray-500 font-medium px-1">
+                      {getSenderName(msg.senderId)}
+                    </span>
+                  )}
+                  
                   <div
                     className={`rounded-2xl px-4 py-2.5 shadow-sm ${
                       isMine
@@ -254,7 +293,7 @@ const ChatRoom = () => {
             );
           })
         )}
-        {/* 🔥 스크롤 타겟 */}
+        {/* 스크롤 타겟 */}
         <div ref={messagesEndRef} />
       </div>
 

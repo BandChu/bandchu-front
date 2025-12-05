@@ -8,6 +8,7 @@ import {
     MessagePageResponse,
     UpdateReadStatusRequest,
     UpdateReadStatusResponse,
+    ChatRoomDetail,
 } from '@/types/chat';
 
 /**
@@ -99,4 +100,11 @@ export const hideChatRoom = async (roomId: number): Promise<void> => {
         console.error('Error response:', error.response?.data);
         throw error;
     }
+};
+
+export const getChatRoomDetail = async (roomId: number): Promise<ChatRoomDetail> => {
+  const response = await apiClient.get<{ success: boolean; data: ChatRoomDetail }>(
+    `/api/chatrooms/${roomId}`
+  );
+  return response.data.data;
 };
