@@ -22,6 +22,8 @@ export interface SignupResponse {
   email: string;
   nickname: string;
   role: 'FAN' | 'ARTIST';
+  accessToken: string;
+  refreshToken: string;
   createdAt: string;
 }
 

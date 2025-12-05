@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import { signup, login, deleteAccount } from "@/lib/api/auth";
+import { signup, deleteAccount } from "@/lib/api/auth";
 import { toast } from "sonner";
 
 const signupFormSchema = z.object({
@@ -33,21 +33,17 @@ const SignupForm = () => {
   const onSubmit = async (data: SignupFormValues) => {
     try {
       // 회원가입 (역할은 아직 선택하지 않았으므로 임시로 FAN 사용, 역할 선택 페이지에서 업데이트)
-      await signup({
+      // 백엔드에서 회원가입 시 JWT 토큰을 응답에 포함하여 반환
+      const signupResponse = await signup({
         email: data.email,
         password: data.password,
         nickname: 'temp', // 프로필 설정에서 업데이트할 예정
         role: 'FAN', // 임시 역할, 역할 선택 페이지에서 업데이트됨
       });
       
-      // 회원가입 성공 후 바로 로그인하여 토큰 받기
-      const loginResponse = await login({
-        email: data.email,
-        password: data.password,
-      });
-      
-      localStorage.setItem('accessToken', loginResponse.accessToken);
-      localStorage.setItem('refreshToken', loginResponse.refreshToken);
+      // 회원가입 응답에서 토큰 저장
+      localStorage.setItem('accessToken', signupResponse.accessToken);
+      localStorage.setItem('refreshToken', signupResponse.refreshToken);
       // 회원가입 시 이메일 저장 (role은 역할 선택 페이지에서 설정)
       localStorage.setItem('userEmail', data.email);
       
