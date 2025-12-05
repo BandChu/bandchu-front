@@ -103,37 +103,45 @@ const Chatting = () => {
   };
 
   // 채팅방 생성 API
-  const handleCreateChatRoom = async () => {
-    if (roomType === RoomType.GROUP && !roomName.trim()) {
-      toast.error("채팅방 이름을 입력하세요");
+const handleCreateChatRoom = async () => {
+  if (roomType === RoomType.GROUP && !roomName.trim()) {
+    toast.error("채팅방 이름을 입력하세요");
+    return;
+  }
+  if (!memberIds.trim()) {
+    toast.error("사용자 ID를 입력하세요");
+    return;
+  }
+
+  try {
+    const ids = memberIds
+      .split(",")
+      .map(id => parseInt(id.trim()))
+      .filter(id => !isNaN(id));
+
+    const room = await createChatRoom({
+      roomType,
+      name: roomType === RoomType.GROUP ? roomName : null,
+      memberIds: ids,
+    });
+
+    if (!room?.roomId || isNaN(room.roomId)) {
+      console.error("유효하지 않은 응답:", room);
+      toast.error("채팅방 정보를 불러올 수 없습니다");
       return;
     }
-    if (!memberIds.trim()) {
-      toast.error("사용자 ID를 입력하세요");
-      return;
-    }
 
-    try {
-      const ids = memberIds
-        .split(",")
-        .map(id => parseInt(id.trim()))
-        .filter(id => !isNaN(id));
-
-      await createChatRoom({
-        roomType,
-        name: roomType === RoomType.GROUP ? roomName: null,
-        memberIds: ids,
-      });
-
-      toast.success("채팅방이 생성되었습니다");
-      setCreateOpen(false);
-      setRoomName("");
-      setMemberIds("");
-      loadChatRooms();
-    } catch (err) {
-      toast.error("채팅방 생성 실패");
-    }
-  };
+    toast.success("채팅방으로 이동합니다");
+    setCreateOpen(false);
+    setRoomName("");
+    setMemberIds("");
+    
+    navigate(`/chatrooms/${room.roomId}`);    
+  } catch (err) {
+    console.error("채팅방 생성 실패:", err);
+    toast.error("채팅방 생성 실패");
+  }
+};
 
   // 시간 포맷팅
   const formatTime = (dateString: string | null) => {
