@@ -6,16 +6,6 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Users, Mic } from "lucide-react";
 import { updateMemberRole, deleteAccount } from "@/lib/api/auth";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 type UserType = "FAN" | "ARTIST";
 
@@ -23,7 +13,6 @@ const SignupType = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userType, setUserType] = useState<UserType>("FAN");
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const isGoogleSignup = (location.state as { isGoogleSignup?: boolean })?.isGoogleSignup || false;
 
   const handleNext = async () => {
@@ -84,8 +73,6 @@ const SignupType = () => {
   };
 
   const handleCancelSignup = async () => {
-    setIsCancelDialogOpen(false);
-    
     // 구글 회원가입인 경우 백엔드에서 회원 삭제
     if (isGoogleSignup) {
       try {
@@ -119,31 +106,12 @@ const SignupType = () => {
     localStorage.removeItem('userProfileImage');
     localStorage.removeItem('userRole');
     
+    toast.info('회원가입이 취소되었습니다.');
     navigate("/auth");
   };
 
   return (
-    <>
-      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>회원가입을 취소하시겠습니까?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isGoogleSignup 
-                ? "회원가입을 취소하면 구글 계정 정보가 저장되지 않습니다. 다시 시작하려면 처음부터 진행해주세요."
-                : "회원가입을 취소하면 입력하신 정보가 저장되지 않습니다. 다시 시작하려면 처음부터 진행해주세요."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>계속하기</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelSignup} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              취소하기
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <div className="min-h-screen bg-background flex flex-col px-6 py-8 max-w-md mx-auto">
+    <div className="min-h-screen bg-background flex flex-col px-6 py-8 max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-12">
           <Button
@@ -214,7 +182,6 @@ const SignupType = () => {
         </Button>
       </div>
     </div>
-    </>
   );
 };
 

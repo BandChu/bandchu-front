@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,16 +8,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { signup, login, deleteAccount } from "@/lib/api/auth";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const signupFormSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
@@ -30,7 +19,6 @@ type SignupFormValues = z.infer<typeof signupFormSchema>;
 const SignupForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   // 일반 회원가입은 아이디/비밀번호부터 시작하므로 기본값 FAN 사용
   const userType = (location.state as { userType?: "FAN" | "ARTIST" })?.userType || "FAN";
 
@@ -112,13 +100,7 @@ const SignupForm = () => {
     }
   };
 
-  const handleBackClick = () => {
-    setIsCancelDialogOpen(true);
-  };
-
-  const handleCancelSignup = async () => {
-    setIsCancelDialogOpen(false);
-    
+  const handleBackClick = async () => {
     // 이미 회원가입이 완료된 경우 백엔드에서 회원 삭제
     try {
       const token = localStorage.getItem('accessToken');
@@ -145,25 +127,7 @@ const SignupForm = () => {
   };
 
   return (
-    <>
-      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>회원가입을 취소하시겠습니까?</AlertDialogTitle>
-            <AlertDialogDescription>
-              회원가입을 취소하면 입력하신 정보가 저장되지 않습니다. 다시 시작하려면 처음부터 진행해주세요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>계속하기</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelSignup} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              취소하기
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <div className="min-h-screen bg-background flex flex-col px-6 py-8 max-w-md mx-auto">
+    <div className="min-h-screen bg-background flex flex-col px-6 py-8 max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-12">
           <Button
@@ -231,7 +195,6 @@ const SignupForm = () => {
         </Form>
       </div>
     </div>
-    </>
   );
 };
 
