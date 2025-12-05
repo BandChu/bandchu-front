@@ -35,7 +35,7 @@ const SignupType = () => {
         localStorage.setItem('userRole', response.role);
         
         toast.success('회원 유형이 설정되었습니다.');
-        navigate("/signup/profile", { state: { userType: response.role } });
+        navigate("/signup/profile", { state: { userType: response.role, isGoogleSignup: true } });
       } catch (error: any) {
         // 네트워크 에러인지 확인
         if (!error.response && error.request) {
@@ -56,7 +56,7 @@ const SignupType = () => {
         const response = await updateMemberRole({ role: userType });
         localStorage.setItem('userRole', response.role);
         toast.success('회원 유형이 설정되었습니다.');
-        navigate("/signup/profile", { state: { userType: response.role } });
+        navigate("/signup/profile", { state: { userType: response.role, isGoogleSignup: false } });
       } catch (error: any) {
         // 네트워크 에러인지 확인
         if (!error.response && error.request) {

@@ -133,10 +133,21 @@ const Login = () => {
       localStorage.setItem('userEmail', data.email);
       toast.success('로그인 성공');
       navigate("/home");
-    } catch (error) {
-      if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-        toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } catch (error: any) {
+      // 네트워크 에러인지 확인
+      if (!error.response && error.request) {
+        toast.error('네트워크 에러가 발생했습니다. 서버에 연결할 수 없습니다.');
+        return;
       }
+      
+      // 서버 응답 구조에 따라 에러 메시지 추출
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        error.message || 
+        '로그인에 실패했습니다.';
+      
+      toast.error(errorMessage);
     }
   };
 
