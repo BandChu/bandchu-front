@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -19,8 +19,10 @@ type ProfileSetupValues = z.infer<typeof profileSetupSchema>;
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string>("");
+  const isGoogleSignup = (location.state as { isGoogleSignup?: boolean })?.isGoogleSignup || false;
 
   const form = useForm<ProfileSetupValues>({
     resolver: zodResolver(profileSetupSchema),
@@ -93,7 +95,13 @@ const ProfileSetup = () => {
             variant="ghost"
             size="icon"
             className="h-10 w-10"
-            onClick={() => navigate("/signup/form")}
+            onClick={() => {
+              if (isGoogleSignup) {
+                navigate("/signup/type", { state: { isGoogleSignup: true } });
+              } else {
+                navigate("/signup/form");
+              }
+            }}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

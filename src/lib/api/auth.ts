@@ -30,6 +30,15 @@ export interface ProfileSetupRequest {
   profileImageUrl?: string;
 }
 
+export interface UpdateRoleRequest {
+  role: 'FAN' | 'ARTIST';
+}
+
+export interface UpdateRoleResponse {
+  memberId: number;
+  role: 'FAN' | 'ARTIST';
+}
+
 export interface ProfileSetupResponse {
   nickname: string;
   profileImageUrl?: string;
@@ -110,6 +119,18 @@ export const logout = async (): Promise<void> => {
 // 회원탈퇴
 export const deleteAccount = async (): Promise<void> => {
   await apiClient.delete('/api/members/me');
+};
+
+// 회원 role 업데이트 (구글 회원가입 시 사용)
+export const updateMemberRole = async (data: UpdateRoleRequest): Promise<UpdateRoleResponse> => {
+  const response = await apiClient.patch<{ success: boolean; data: UpdateRoleResponse; message: string }>('/api/members/me/role', data);
+  
+  // API 응답 구조: { success: true, data: { memberId, role }, message: "string" }
+  if (response.data && response.data.data) {
+    return response.data.data;
+  }
+  
+  throw new Error('역할 업데이트 응답 구조가 올바르지 않습니다.');
 };
 
 // Google OAuth Client ID 조회 (공개 설정)

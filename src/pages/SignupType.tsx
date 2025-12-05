@@ -1,18 +1,47 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Users, Mic } from "lucide-react";
+import { updateMemberRole } from "@/lib/api/auth";
+import { toast } from "sonner";
 
 type UserType = "FAN" | "ARTIST";
 
 const SignupType = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userType, setUserType] = useState<UserType>("FAN");
+  const isGoogleSignup = (location.state as { isGoogleSignup?: boolean })?.isGoogleSignup || false;
 
-  const handleNext = () => {
-    navigate("/signup/form", { state: { userType } });
+  const handleNext = async () => {
+    // 구글 회원가입인 경우 role을 백엔드에 업데이트
+    if (isGoogleSignup) {
+      try {
+        const response = await updateMemberRole({ role: userType });
+        // localStorage에 role 업데이트 (백엔드 응답에서 받은 role 사용)
+        localStorage.setItem('userRole', response.role);
+        
+        toast.success('회원 유형이 설정되었습니다.');
+        navigate("/signup/profile", { state: { userType: response.role } });
+      } catch (error: any) {
+        // 네트워크 에러인지 확인
+        if (!error.response && error.request) {
+          toast.error('네트워크 에러가 발생했습니다. 서버에 연결할 수 없습니다.');
+          return;
+        }
+        
+        const errorMessage = 
+          error.response?.data?.message || 
+          error.message || 
+          '회원 유형 설정에 실패했습니다.';
+        toast.error(errorMessage);
+      }
+    } else {
+      // 일반 회원가입인 경우 기존 플로우대로
+      navigate("/signup/form", { state: { userType } });
+    }
   };
 
   return (
