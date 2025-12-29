@@ -1,5 +1,5 @@
 export const login = async (email: string, password: string) => {
-  const response = await fetch(`https://api.bandchu.com/api/auth/login`, {
+  const response = await fetch(`https://api.band-chu.com/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

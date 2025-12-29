@@ -7,7 +7,7 @@ const getBaseURL = () => {
   }
   // 프로덕션 환경에서는 배포 서버 사용
   
-  return import.meta.env.VITE_API_BASE_URL || 'https://api.bandchu.com';
+  return import.meta.env.VITE_API_BASE_URL || 'https://api.band-chu.com';
 
 };
 

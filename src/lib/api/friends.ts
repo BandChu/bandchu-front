@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://api.bandchu.com";
+const API_BASE_URL = "https://api.band-chu.com";
 
 // 인증 헤더 생성
 const getAuthHeaders = (): Record<string, string> => {
