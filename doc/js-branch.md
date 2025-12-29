@@ -22,7 +22,7 @@
 
 #### 인프라/설정
 - **`vite.config.ts`** - 빌드 도구 설정
-  - API 프록시: `/api` → `https://bandchu.o-r.kr/api`
+  - API 프록시: `/api` → `https://api.bandchu.com`
   - 개발 서버 포트: 8000
 - **`src/index.css`** - 전역 스타일
   - Sonner 토스트 폰트 (Pretendard) 적용
