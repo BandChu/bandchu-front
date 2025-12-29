@@ -150,7 +150,7 @@ let wsClient: WebSocketClient | null = null;
  */
 export const getWebSocketClient = (): WebSocketClient => {
     if (!wsClient) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.bandchu.com";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.band-chu.com";
         wsClient = new WebSocketClient(apiUrl);
     }
     return wsClient;
