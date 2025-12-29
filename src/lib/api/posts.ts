@@ -72,7 +72,7 @@ export interface ApiResponse<T> {
 }
 
 // API Base URL
-const API_BASE_URL = "https://api.bandchu.com";
+const API_BASE_URL = "https://api.band-chu.com";
 
 // 인증 토큰 가져오기
 const getAuthToken = (): string | null => {
